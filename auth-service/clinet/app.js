@@ -9,16 +9,20 @@ if (registerForm) {
     const password = document.getElementById("registerPassword").value;
     const msg = document.getElementById("registerMsg");
 
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await res.json();
-    msg.textContent = data.message;
+      const data = await res.json();
+      msg.textContent = data.message;
+    } catch (err) {
+      msg.textContent = "Server error";
+    }
   });
 }
 
@@ -31,30 +35,131 @@ if (loginForm) {
     const password = document.getElementById("loginPassword").value;
     const msg = document.getElementById("loginMsg");
 
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
-      localStorage.setItem("email", data.user.email);
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
+        localStorage.setItem("email", data.user.email);
 
-      if (data.user.role === "admin") {
-        window.location.href = "admin.html";
+        if (data.user.role === "admin") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "user.html";
+        }
       } else {
-        window.location.href = "user.html";
+        msg.textContent = data.message || "Login failed";
       }
-    } else {
-      msg.textContent = data.message || "Login failed";
+    } catch (err) {
+      msg.textContent = "Server error";
     }
   });
+}
+
+const forgotLink = document.getElementById("forgotLink");
+const forgotSection = document.getElementById("forgotSection");
+if (forgotLink && forgotSection) {
+  forgotLink.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    if (forgotSection.style.display === "none" || forgotSection.style.display === "") {
+      forgotSection.style.display = "block";
+    } else {
+      forgotSection.style.display = "none";
+    }
+  });
+}
+
+const sendTokenBtn = document.getElementById("sendTokenBtn");
+if (sendTokenBtn) {
+  sendTokenBtn.addEventListener("click", async () => {
+    const email = document.getElementById("fpEmail").value;
+    const msg = document.getElementById("fpMsg");
+
+    if (!email) {
+      msg.textContent = "Please enter your email";
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+      msg.textContent = data.message || "If this email exists, a reset link has been sent";
+    } catch (err) {
+      msg.textContent = "Server error";
+    }
+  });
+}
+
+const resetPasswordForm = document.getElementById("resetPasswordForm");
+if (resetPasswordForm) {
+  resetPasswordForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const tokenInput = document.getElementById("resetToken");
+    const newPasswordInput = document.getElementById("resetNewPassword");
+    const msg = document.getElementById("resetMsg");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get("token");
+
+    const token = tokenInput ? tokenInput.value || tokenFromUrl : tokenFromUrl;
+    const newPassword = newPasswordInput.value;
+
+    if (!token || !newPassword) {
+      msg.textContent = "Missing token or new password";
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ token, newPassword })
+      });
+
+      const data = await res.json();
+      msg.textContent = data.message;
+
+      if (data.message === "Password reset successful") {
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1500);
+      }
+    } catch (err) {
+      msg.textContent = "Server error";
+    }
+  });
+}
+
+function fillResetTokenFromUrl() {
+  const tokenInput = document.getElementById("resetToken");
+  if (!tokenInput) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get("token");
+
+  if (token) {
+    tokenInput.value = token;
+  }
 }
 
 async function loadUserPage() {
@@ -63,14 +168,18 @@ async function loadUserPage() {
 
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`${API_BASE}/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  const data = await res.json();
-  userInfo.textContent = `Welcome ${data.email} | Role: ${data.role} | API calls used: ${data.api_calls_used}`;
+    const data = await res.json();
+    userInfo.textContent = `Welcome ${data.email} | Role: ${data.role} | API calls used: ${data.api_calls_used}`;
+  } catch (err) {
+    userInfo.textContent = "Failed to load user info";
+  }
 }
 
 async function loadAdminPage() {
@@ -79,14 +188,18 @@ async function loadAdminPage() {
 
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`${API_BASE}/auth/admin/users`, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  try {
+    const res = await fetch(`${API_BASE}/auth/admin/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  const data = await res.json();
-  adminInfo.textContent = JSON.stringify(data, null, 2);
+    const data = await res.json();
+    adminInfo.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    adminInfo.textContent = "Failed to load admin data";
+  }
 }
 
 function logout() {
@@ -94,5 +207,6 @@ function logout() {
   window.location.href = "login.html";
 }
 
+fillResetTokenFromUrl();
 loadUserPage();
 loadAdminPage();
