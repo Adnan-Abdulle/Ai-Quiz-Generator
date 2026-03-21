@@ -1,13 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import fetch from "node-fetch";
-import cors from "cors"; // ✅ ADD
 
 dotenv.config();
 
 const app = express();
-
-app.use(cors()); // ✅ ADD THIS LINE
+app.use(cors());
 app.use(express.json());
 
 app.post("/ai/generate", async (req, res) => {
@@ -18,37 +17,55 @@ app.post("/ai/generate", async (req, res) => {
             return res.status(400).json({ error: "Topic is required" });
         }
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "meta-llama/llama-3-8b-instruct",
-                messages: [
-                    {
-                        role: "user",
-                        content: `Generate exactly 3 short quiz questions about ${topic}`
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/google/flan-t5-large",
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${process.env.HF_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    inputs: `Generate exactly 3 short quiz questions about ${topic}. Format as a numbered list.`,
+                    parameters: {
+                        max_new_tokens: 100,
+                        temperature: 0.7
                     }
-                ]
-            })
-        });
+                })
+            }
+        );
 
-        const data = await response.json();
-        console.log("AI RESPONSE:", data);
+        const textResponse = await response.text();
 
-        const text = data.choices?.[0]?.message?.content || "";
+        console.log("RAW RESPONSE:", textResponse);
+
+        let data;
+        try {
+            data = JSON.parse(textResponse);
+        } catch {
+            return res.status(500).json({
+                error: "Invalid AI response",
+                raw: textResponse
+            });
+        }
+
+        if (data.error) {
+            return res.status(500).json({ error: data.error });
+        }
+
+        const text = data.generated_text || data[0]?.generated_text || "";
 
         const questions = text
-            .split("\n")
-            .filter(q => q.trim() !== "")
-            .map(q => q.replace(/^\d+[\).\s-]*/, "").trim());
+            .split(/\n|\d+\./)
+            .map(q => q.trim())
+            .filter(q => q.length > 5)
+            .slice(0, 3);
 
         res.json({ questions });
 
     } catch (error) {
-        console.error(error);
+        console.error("SERVER ERROR:", error);
         res.status(500).json({ error: "AI service failed" });
     }
 });
