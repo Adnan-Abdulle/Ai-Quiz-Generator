@@ -17,37 +17,48 @@ app.post("/ai/generate", async (req, res) => {
             return res.status(400).json({ error: "Topic is required" });
         }
 
-        const response = await fetch(
-            "https://api.groq.com/openai/v1/chat/completions",
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "llama3-8b-8192",
-                    messages: [
-                        {
-                            role: "user",
-                            content: `Generate exactly 3 short quiz questions about ${topic}. Format as a numbered list.`
-                        }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 200
-                })
-            }
-        );
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "user",
+                        content: `Generate exactly 3 short quiz questions about ${topic}. Format as a numbered list.`
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 200
+            })
+        });
 
         const textResponse = await response.text();
+        console.log("STATUS:", response.status);
         console.log("RAW RESPONSE:", textResponse);
+
+        if (!response.ok) {
+            return res.status(response.status).json({
+                error: "OpenAI request failed",
+                details: textResponse
+            });
+        }
+
+        if (!textResponse) {
+            return res.status(500).json({
+                error: "Empty response from OpenAI"
+            });
+        }
 
         let data;
         try {
             data = JSON.parse(textResponse);
         } catch {
             return res.status(500).json({
-                error: "Invalid AI response",
+                error: "Invalid JSON from OpenAI",
                 raw: textResponse
             });
         }
@@ -64,7 +75,10 @@ app.post("/ai/generate", async (req, res) => {
 
     } catch (error) {
         console.error("SERVER ERROR:", error);
-        res.status(500).json({ error: "AI service failed" });
+        res.status(500).json({
+            error: "AI service failed",
+            details: error.message
+        });
     }
 });
 
