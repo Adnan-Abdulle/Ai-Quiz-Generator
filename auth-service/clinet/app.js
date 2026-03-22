@@ -207,6 +207,53 @@ function logout() {
   window.location.href = "login.html";
 }
 
+document.getElementById("generateQuizBtn").addEventListener("click", generate);
+
+async function generate() {
+  const topic = document.getElementById("quizTopic").value;
+  const difficulty = document.getElementById("quizDifficulty").value;
+  const count = document.getElementById("quizCount").value;
+
+  const quizList = document.getElementById("quizList");
+  const generateMsg = document.getElementById("generateMsg");
+
+  quizList.innerHTML = "";
+  generateMsg.textContent = "Generating...";
+
+  try {
+    const res = await fetch("http://localhost:5001/ai/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ topic, difficulty, count })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      generateMsg.textContent = data.error || "Failed to generate quiz";
+      return;
+    }
+
+    generateMsg.textContent = "Quiz generated successfully";
+
+    const ul = document.createElement("ul");
+
+    data.questions.forEach(q => {
+      const li = document.createElement("li");
+      li.textContent = q;
+      ul.appendChild(li);
+    });
+
+    quizList.innerHTML = "";
+    quizList.appendChild(ul);
+  } catch (error) {
+    generateMsg.textContent = "Server error while generating quiz";
+    console.error(error);
+  }
+}
+
 fillResetTokenFromUrl();
 loadUserPage();
 loadAdminPage();
