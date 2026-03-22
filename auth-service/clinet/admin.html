@@ -9,7 +9,40 @@
 <body>
   <div class="container">
     <h2>Admin Dashboard</h2>
-    <pre id="adminInfo"></pre>
+    <p class="subtitle">Generate and manage quizzes for users.</p>
+
+    <div class="card">
+      <h3>Create a Quiz</h3>
+
+      <label for="quizTopic">Quiz Topic</label>
+      <input type="text" id="quizTopic" placeholder="Enter topic (e.g. JavaScript, Math, History)" />
+
+      <label for="quizDifficulty">Difficulty</label>
+      <select id="quizDifficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+
+      <label for="quizCount">Number of Questions</label>
+      <input type="number" id="quizCount" min="1" max="20" value="5" />
+
+      <button id="generateQuizBtn">Generate Quiz</button>
+      <p id="generateMsg"></p>
+    </div>
+
+    <div class="card">
+      <h3>Admin Info</h3>
+      <pre id="adminInfo"></pre>
+    </div>
+
+    <div class="card">
+      <h3>Generated Quizzes</h3>
+      <div id="quizList">
+        <p>No quizzes generated yet.</p>
+      </div>
+    </div>
+
     <button onclick="logout()">Logout</button>
   </div>
 

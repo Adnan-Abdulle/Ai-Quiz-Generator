@@ -9,7 +9,20 @@
 <body>
   <div class="container">
     <h2>User Dashboard</h2>
-    <p id="userInfo"></p>
+    <p class="subtitle">View and take available quizzes.</p>
+
+    <div class="card">
+      <h3>User Info</h3>
+      <p id="userInfo"></p>
+    </div>
+
+    <div class="card">
+      <h3>Available Quizzes</h3>
+      <div id="availableQuizzes">
+        <p>No quizzes available yet.</p>
+      </div>
+    </div>
+
     <button onclick="logout()">Logout</button>
   </div>
 
