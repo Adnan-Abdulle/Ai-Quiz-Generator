@@ -11,10 +11,16 @@ app.use(express.json());
 
 app.post("/ai/generate", async (req, res) => {
     try {
-        const { topic } = req.body;
+        const { topic, difficulty, count } = req.body;
 
         if (!topic) {
             return res.status(400).json({ error: "Topic is required" });
+        }
+        if (!difficulty) {
+            return res.status(400).json({ error: "Difficulty is required" });
+        }
+        if (!count) {
+            return res.status(400).json({ error: "Count is required" });
         }
 
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -28,7 +34,7 @@ app.post("/ai/generate", async (req, res) => {
                 messages: [
                     {
                         role: "user",
-                        content: `Generate exactly 3 short quiz questions about ${topic}. Format as a numbered list.`
+                        content: `Generate exactly ${count} ${difficulty} short quiz questions about ${topic}. Return only the questions. Format as a numbered list .`
                     }
                 ],
                 temperature: 0.7,
@@ -69,7 +75,7 @@ app.post("/ai/generate", async (req, res) => {
             .split(/\n|\d+\./)
             .map(q => q.trim())
             .filter(q => q.length > 5)
-            .slice(0, 3);
+            .slice(0, Number(count));
 
         res.json({ questions });
 
