@@ -254,6 +254,18 @@ router.post("/admin/create-quiz", verifyToken, requireAdmin, async (req, res) =>
             return res.status(400).json({ message: "Topic, difficulty, and count are required" });
         }
 
+        const [userRows] = await db.execute(
+            "SELECT api_calls_used FROM users WHERE id = ?",
+            [req.user.id]
+        );
+
+        const callsUsed = userRows[0].api_calls_used;
+        let warning = null;
+
+        if (callsUsed >= 20) {
+            warning = "You have reached the free API limit (20 calls)";
+        }
+
         const aiRes = await fetch("http://localhost:5001/ai/generate", {
             method: "POST",
             headers: {
@@ -273,13 +285,19 @@ router.post("/admin/create-quiz", verifyToken, requireAdmin, async (req, res) =>
 
         await db.execute(
             `INSERT INTO quizzes (topic, difficulty, question_count, questions, created_by)
-       VALUES (?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?)`,
             [topic, difficulty, Number(count), JSON.stringify(aiData.questions), req.user.id]
+        );
+
+        await db.execute(
+            "UPDATE users SET api_calls_used = api_calls_used + 1 WHERE id = ?",
+            [req.user.id]
         );
 
         return res.status(201).json({
             message: "Quiz created successfully",
-            questions: aiData.questions
+            questions: aiData.questions,
+            warning
         });
     } catch (err) {
         console.error("Create quiz error:", err);

@@ -175,7 +175,7 @@ async function loadUserPage() {
     });
 
     const data = await res.json();
-    userInfo.textContent = `Welcome ${data.email} | Role: ${data.role} | API calls used: ${data.api_calls_used}`;
+    userInfo.textContent = `Welcome ${data.email} | Role: ${data.role} `;
   } catch (err) {
     userInfo.textContent = "Failed to load user info";
   }
@@ -188,16 +188,25 @@ async function loadAdminPage() {
   const token = localStorage.getItem("token");
 
   try {
-    const res = await fetch(`${API_BASE}/auth/admin/users`, {
+    const res = await fetch(`${API_BASE}/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     });
 
     const data = await res.json();
-    adminInfo.textContent = JSON.stringify(data, null, 2);
+
+    if (!res.ok) {
+      adminInfo.textContent = data.message || "Failed to load admin data";
+      return;
+    }
+
+    adminInfo.textContent = `Admin: ${data.email}
+Role: ${data.role}
+API Calls Used: ${data.api_calls_used}`;
   } catch (err) {
     adminInfo.textContent = "Failed to load admin data";
+    console.error(err);
   }
 }
 
@@ -235,8 +244,12 @@ async function generate() {
     const data = await res.json();
 
     if (!res.ok) {
-      generateMsg.textContent = data.error || "Failed to generate quiz";
+      generateMsg.textContent = data.error || data.message || "Failed to generate quiz";
       return;
+    }
+
+    if (data.warning) {
+      alert(data.warning);
     }
 
     generateMsg.textContent = "Quiz generated successfully";
@@ -251,6 +264,8 @@ async function generate() {
 
     quizList.innerHTML = "";
     quizList.appendChild(ul);
+
+    await loadAdminPage();
   } catch (error) {
     generateMsg.textContent = "Server error while generating quiz";
     console.error(error);
