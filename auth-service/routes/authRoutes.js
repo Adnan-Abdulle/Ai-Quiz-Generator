@@ -139,8 +139,7 @@ router.post("/forgot-password", async (req, res) => {
             [token, expires, user.id]
         );
 
-        const resetLink = `http://127.0.0.1:5500/auth-service/clinet/reset.html?token=${token}`;
-
+const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
         console.log("Sending reset email to:", normalizedEmail);
         console.log("Reset link:", resetLink);
 

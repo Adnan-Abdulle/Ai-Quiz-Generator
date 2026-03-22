@@ -1,19 +1,23 @@
 require("dotenv").config();
 const mysql = require("mysql2/promise");
+const fs = require("fs");
 
-console.log("DB CONFIG");
-console.log("HOST:", JSON.stringify(process.env.DB_HOST));
-console.log("USER:", JSON.stringify(process.env.DB_USER));
-console.log("DB:", JSON.stringify(process.env.DB_NAME));
-console.log("PASSWORD LENGTH:", process.env.DB_PASSWORD ? process.env.DB_PASSWORD.length : "undefined");
+const poolConfig = {
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+};
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10
-});
+if (process.env.DB_SSL === "true") {
+  poolConfig.ssl = {
+    ca: fs.readFileSync(process.env.DB_CA_PATH),
+  };
+}
+
+const pool = mysql.createPool(poolConfig);
 
 module.exports = pool;
