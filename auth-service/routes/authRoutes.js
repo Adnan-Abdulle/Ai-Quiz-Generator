@@ -246,4 +246,60 @@ router.get("/admin/users", verifyToken, requireAdmin, async (req, res) => {
     }
 });
 
+router.post("/admin/create-quiz", verifyToken, requireAdmin, async (req, res) => {
+    try {
+        const { topic, difficulty, count } = req.body;
+
+        if (!topic || !difficulty || !count) {
+            return res.status(400).json({ message: "Topic, difficulty, and count are required" });
+        }
+
+        const aiRes = await fetch("http://localhost:5001/ai/generate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ topic, difficulty, count })
+        });
+
+        const aiData = await aiRes.json();
+
+        if (!aiRes.ok) {
+            return res.status(aiRes.status).json({
+                message: "AI generation failed",
+                error: aiData.error || "Unknown error"
+            });
+        }
+
+        await db.execute(
+            `INSERT INTO quizzes (topic, difficulty, question_count, questions, created_by)
+       VALUES (?, ?, ?, ?, ?)`,
+            [topic, difficulty, Number(count), JSON.stringify(aiData.questions), req.user.id]
+        );
+
+        return res.status(201).json({
+            message: "Quiz created successfully",
+            questions: aiData.questions
+        });
+    } catch (err) {
+        console.error("Create quiz error:", err);
+        return res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
+router.get("/quizzes", verifyToken, async (req, res) => {
+    try {
+        const [rows] = await db.execute(
+            `SELECT id, topic, difficulty, question_count, questions, created_at
+       FROM quizzes
+       ORDER BY created_at DESC`
+        );
+
+        return res.json(rows);
+    } catch (err) {
+        console.error("Get quizzes error:", err);
+        return res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
 module.exports = router;

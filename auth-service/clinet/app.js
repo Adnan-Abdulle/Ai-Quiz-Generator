@@ -1,5 +1,4 @@
-const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
-
+const API_BASE = "http://localhost:4000";
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
@@ -207,8 +206,11 @@ function logout() {
   window.location.href = "login.html";
 }
 
-document.getElementById("generateQuizBtn").addEventListener("click", generate);
+const generateBtn = document.getElementById("generateQuizBtn");
 
+if (generateBtn) {
+  generateBtn.addEventListener("click", generate);
+}
 async function generate() {
   const topic = document.getElementById("quizTopic").value;
   const difficulty = document.getElementById("quizDifficulty").value;
@@ -221,10 +223,11 @@ async function generate() {
   generateMsg.textContent = "Generating...";
 
   try {
-    const res = await fetch("http://localhost:5001/ai/generate", {
+    const res = await fetch(`${API_BASE}/auth/admin/create-quiz`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
       },
       body: JSON.stringify({ topic, difficulty, count })
     });
@@ -254,6 +257,55 @@ async function generate() {
   }
 }
 
+async function loadQuizzes() {
+  const quizList = document.getElementById("availableQuizzes");
+  if (!quizList) return;
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/quizzes`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const quizzes = await res.json();
+
+    quizList.innerHTML = "";
+
+    quizzes.forEach(quiz => {
+      const container = document.createElement("div");
+      container.className = "quiz-card";
+
+      const title = document.createElement("h4");
+      title.textContent = `${quiz.topic} (${quiz.difficulty})`;
+
+      const ul = document.createElement("ul");
+
+    
+      const questions = typeof quiz.questions === "string"
+        ? JSON.parse(quiz.questions)
+        : quiz.questions;
+
+      questions.forEach(q => {
+        const li = document.createElement("li");
+        li.textContent = q;
+        ul.appendChild(li);
+      });
+
+      container.appendChild(title);
+      container.appendChild(ul);
+      quizList.appendChild(container);
+    });
+
+  } catch (err) {
+    quizList.textContent = "Failed to load quizzes";
+    console.error(err);
+  }
+}
+
 fillResetTokenFromUrl();
 loadUserPage();
 loadAdminPage();
+loadQuizzes();
