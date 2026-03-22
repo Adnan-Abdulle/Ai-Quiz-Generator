@@ -18,26 +18,28 @@ app.post("/ai/generate", async (req, res) => {
         }
 
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/google/flan-t5-large",
+            "https://api.groq.com/openai/v1/chat/completions",
             {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${process.env.HF_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    inputs: `Generate exactly 3 short quiz questions about ${topic}. Format as a numbered list.`,
-                    parameters: {
-                        max_new_tokens: 100,
-                        temperature: 0.7
-                    }
+                    model: "llama3-8b-8192",
+                    messages: [
+                        {
+                            role: "user",
+                            content: `Generate exactly 3 short quiz questions about ${topic}. Format as a numbered list.`
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 200
                 })
             }
         );
 
         const textResponse = await response.text();
-
         console.log("RAW RESPONSE:", textResponse);
 
         let data;
@@ -50,11 +52,7 @@ app.post("/ai/generate", async (req, res) => {
             });
         }
 
-        if (data.error) {
-            return res.status(500).json({ error: data.error });
-        }
-
-        const text = data.generated_text || data[0]?.generated_text || "";
+        const text = data.choices?.[0]?.message?.content || "";
 
         const questions = text
             .split(/\n|\d+\./)
