@@ -26,8 +26,7 @@ async function initDb() {
         }
     } catch (err) {
         //console.error("initDb error:", err.message);
-            console.error("Register error:", err);
-    res.status(500).json({ message: "Server error" });
+            console.error("initDb error:", err);
     }
 }
 
