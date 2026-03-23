@@ -249,7 +249,12 @@ async function generate() {
     }
 
     if (data.warning) {
-      alert(data.warning);
+      const warned = localStorage.getItem("apiLimitWarned");
+
+      if (!warned) {
+        alert(data.warning);
+        localStorage.setItem("apiLimitWarned", "true");
+      }
     }
 
     generateMsg.textContent = "Quiz generated successfully";

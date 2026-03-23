@@ -266,7 +266,7 @@ router.post("/admin/create-quiz", verifyToken, requireAdmin, async (req, res) =>
             warning = "You have reached the free API limit (20 calls)";
         }
 
-        const aiRes = await fetch("http://localhost:5001/ai/generate", {
+        const aiRes = await fetch("https://aacomp4537.com/ai/generate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -274,7 +274,19 @@ router.post("/admin/create-quiz", verifyToken, requireAdmin, async (req, res) =>
             body: JSON.stringify({ topic, difficulty, count })
         });
 
-        const aiData = await aiRes.json();
+        const raw = await aiRes.text();
+        console.log("AI STATUS:", aiRes.status);
+        console.log("AI RAW:", raw);
+
+        let aiData;
+        try {
+            aiData = JSON.parse(raw);
+        } catch {
+            return res.status(500).json({
+                message: "AI returned invalid JSON",
+                raw
+            });
+        }
 
         if (!aiRes.ok) {
             return res.status(aiRes.status).json({
