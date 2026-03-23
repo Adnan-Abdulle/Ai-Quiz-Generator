@@ -1,3 +1,5 @@
+
+//jwt is a library that creats and verify tokens
 const jwt = require("jsonwebtoken");
 
 function verifyToken(req, res, next) {
