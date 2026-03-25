@@ -8,6 +8,7 @@ const { verifyToken, requireAdmin } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+//SMTH setting
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
@@ -109,39 +110,58 @@ router.post("/login", async (req, res) => {
 
 router.post("/forgot-password", async (req, res) => {
     try {
+        console.log("=== FORGOT PASSWORD START ===");
+        console.log("Request body:", req.body);
+
         const { email } = req.body;
 
         if (!email) {
+            console.log("❌ No email provided");
             return res.status(400).json({ message: "Email is required" });
         }
 
         const normalizedEmail = email.trim().toLowerCase();
-        console.log("forgot-password hit with:", normalizedEmail);
-        console.log("EMAIL_USER:", process.env.EMAIL_USER);
+        console.log("📧 Normalized email:", normalizedEmail);
+        console.log("📧 EMAIL_USER (sender):", process.env.EMAIL_USER);
 
+        // Check user exists
         const [rows] = await db.execute(
             "SELECT id FROM users WHERE email = ?",
             [normalizedEmail]
         );
 
+        console.log("🔍 DB result:", rows);
+
         if (rows.length === 0) {
+            console.log("⚠️ Email not found in DB");
             return res.json({
                 message: "If this email exists, a reset link has been sent"
             });
         }
 
         const user = rows[0];
+        console.log("✅ User found:", user.id);
+
+        // Generate token
         const token = crypto.randomBytes(32).toString("hex");
         const expires = new Date(Date.now() + 15 * 60 * 1000);
 
+        console.log("🔑 Token generated:", token);
+        console.log("⏰ Expires at:", expires);
+
+        // Save token
         await db.execute(
             "UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?",
             [token, expires, user.id]
         );
 
-const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
-        console.log("Sending reset email to:", normalizedEmail);
-        console.log("Reset link:", resetLink);
+        console.log("💾 Token saved to DB");
+
+        const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
+        console.log("🔗 Reset link:", resetLink);
+
+        // Send email
+        console.log("📤 Attempting to send email...");
 
         const info = await transporter.sendMail({
             from: `"AI Quiz App" <${process.env.EMAIL_USER}>`,
@@ -164,13 +184,16 @@ const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
             `
         });
 
-        console.log("Mail sent:", info);
+        console.log("✅ Mail sent successfully!");
+        console.log("📬 Response:", info.response);
+        console.log("=== FORGOT PASSWORD END ===");
 
         return res.json({
             message: "If this email exists, a reset link has been sent"
         });
+
     } catch (err) {
-        console.error("Forgot password error FULL:", err);
+        console.error("❌ Forgot password error FULL:", err);
         return res.status(500).json({
             message: "Forgot password failed",
             error: err.message
