@@ -7,10 +7,16 @@ const initDb = require("./initDb");
 
 const app = express();
 
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+console.log("FRONTEND_URL_PROD:", process.env.FRONTEND_URL_PROD);
+
 app.use(cors({
   origin: [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
     process.env.FRONTEND_URL,
-    process.env.FRONTEND_URL_PROD
+    process.env.FRONTEND_URL_PROD,
+    "https://ai-quiz-generator-3-avjw.onrender.com"
   ],
   credentials: true
 }));
