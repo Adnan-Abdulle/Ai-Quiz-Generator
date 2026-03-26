@@ -10,16 +10,17 @@ const router = express.Router();
 
 //SMTH setting
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: true,
+  host: process.env.SMTP_HOST, // smtp.mail.yahoo.com
+  port: 587,                   // Change from 465 to 587
+  secure: false,               // Change from true to false for port 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  tls: {
+    rejectUnauthorized: false  // Helps if there are certificate depth issues on the host
+  },
+  connectionTimeout: 20000,    // Increase to 20s to give the handshake more time
 });
 
 transporter.verify((error, success) => {
