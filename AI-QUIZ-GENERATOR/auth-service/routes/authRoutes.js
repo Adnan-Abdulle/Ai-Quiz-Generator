@@ -157,7 +157,10 @@ router.post("/forgot-password", async (req, res) => {
 
         console.log("💾 Token saved to DB");
 
-        const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
+       // const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
+
+       const clientUrl = process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL;
+        const resetLink = `${clientUrl}/reset.html?token=${token}`;
         console.log("🔗 Reset link:", resetLink);
 
         // Send email
