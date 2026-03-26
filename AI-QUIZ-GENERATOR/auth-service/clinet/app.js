@@ -1,4 +1,4 @@
-const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
+const API_BASE = "https://ai-quiz-generator-3-avjw.onrender.com";
 
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {
@@ -91,6 +91,7 @@ if (sendTokenBtn) {
     }
 
     try {
+      msg.textContent = "Sending...";
       const res = await fetch(`${API_BASE}/auth/forgot-password`, {
         method: "POST",
         headers: {
