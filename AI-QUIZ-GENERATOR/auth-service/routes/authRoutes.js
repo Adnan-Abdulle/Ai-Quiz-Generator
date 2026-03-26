@@ -12,11 +12,14 @@ const router = express.Router();
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: false, // VERY IMPORTANT for 465
+  secure: false, // correct for 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 transporter.verify((error, success) => {
@@ -166,26 +169,32 @@ router.post("/forgot-password", async (req, res) => {
         // Send email
         console.log("📤 Attempting to send email...");
 
-        const info = await transporter.sendMail({
-            from: `"AI Quiz App" <${process.env.EMAIL_USER}>`,
-            to: normalizedEmail,
-            subject: "Password Reset Request",
-            html: `
-                <h2>Password Reset</h2>
-                <p>You requested to reset your password.</p>
-                <p>Click the button below:</p>
-                <p>
-                    <a href="${resetLink}" 
-                       style="padding:10px 15px; background:#4CAF50; color:white; text-decoration:none; border-radius:5px;">
-                       Reset Password
-                    </a>
-                </p>
-                <p>If the button does not work, use this link:</p>
-                <p>${resetLink}</p>
-                <p>If you did not request this, you can ignore this email.</p>
-                <p>This link expires in 15 minutes.</p>
-            `
-        });
+        console.log("before sendMail");
+
+const info = await transporter.sendMail({
+  from: `"AI Quiz App" <${process.env.EMAIL_USER}>`,
+  to: normalizedEmail,
+  subject: "Password Reset Request",
+  html: `
+    <h2>Password Reset</h2>
+    <p>You requested to reset your password.</p>
+    <p>Click the button below:</p>
+    <p>
+      <a href="${resetLink}" 
+         style="padding:10px 15px; background:#4CAF50; color:white; text-decoration:none; border-radius:5px;">
+         Reset Password
+      </a>
+    </p>
+    <p>If the button does not work, use this link:</p>
+    <p>${resetLink}</p>
+    <p>If you did not request this, you can ignore this email.</p>
+    <p>This link expires in 15 minutes.</p>
+  `
+});
+
+console.log("after sendMail", info);
+
+
 
         console.log("✅ Mail sent successfully!");
         console.log("📬 Response:", info.response);
@@ -198,7 +207,7 @@ router.post("/forgot-password", async (req, res) => {
     } catch (err) {
         console.error("❌ Forgot password error FULL:", err);
         return res.status(500).json({
-            message: "Forgot password failed",
+            message: err.message,
             error: err.message
         });
     }
