@@ -1,4 +1,6 @@
-const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
+// const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
+const API_BASE = "http://localhost:4000";
+
 
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {
@@ -51,11 +53,11 @@ if (loginForm) {
         localStorage.setItem("role", data.user.role);
         localStorage.setItem("email", data.user.email);
 
-        if (data.user.role === "admin") {
-          window.location.href = "admin.html";
-        } else {
-          window.location.href = "user.html";
-        }
+if (data.user.role === "admin" || data.user.role === "teacher") {
+  window.location.href = "admin.html";
+} else {
+  window.location.href = "user.html";
+}
       } else {
         msg.textContent = data.message || "Login failed";
       }

@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const db = require("../db");
-const { verifyToken, requireAdmin } = require("../middleware/authMiddleware");
+const { verifyToken, requireAdmin, requireAdminOrTeacher } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -163,8 +163,10 @@ router.post("/forgot-password", async (req, res) => {
 
        // const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
 
-       const clientUrl = process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL;
+        const clientUrl = process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL;
+
         const resetLink = `${clientUrl}/reset.html?token=${token}`;
+
         console.log("🔗 Reset link:", resetLink);
 
         // Send email
@@ -282,7 +284,7 @@ router.get("/admin/users", verifyToken, requireAdmin, async (req, res) => {
     }
 });
 
-router.post("/admin/create-quiz", verifyToken, requireAdmin, async (req, res) => {
+router.post("/admin/create-quiz", verifyToken, requireAdminOrTeacher, async (req, res) => {
     try {
         const { topic, difficulty, count } = req.body;
 

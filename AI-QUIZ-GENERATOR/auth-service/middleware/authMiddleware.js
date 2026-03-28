@@ -1,4 +1,4 @@
-
+module.exports = { verifyToken, requireAdmin, requireAdminOrTeacher };
 //jwt is a library that creates and verify tokens
 const jwt = require("jsonwebtoken");
 
@@ -27,4 +27,11 @@ function requireAdmin(req, res, next) {
     next();
 }
 
-module.exports = { verifyToken, requireAdmin };
+function requireAdminOrTeacher(req, res, next) {
+  if (req.user.role !== "admin" && req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  next();
+}
+
+//smodule.exports = { verifyToken, requireAdmin };
