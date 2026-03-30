@@ -370,4 +370,25 @@ router.get("/quizzes", verifyToken, async (req, res) => {
     }
 });
 
+router.post("/submit-quiz", verifyToken, async (req, res) => {
+  const { quiz_id, answers } = req.body;
+  const userId = req.user.id;
+
+  if (!quiz_id || !answers || !Array.isArray(answers)) {
+    return res.status(400).json({ message: "quiz_id and answers are required" });
+  }
+
+  try {
+    await db.execute(
+      "INSERT INTO submissions (user_id, quiz_id, answers) VALUES (?, ?, ?)",
+      [userId, quiz_id, JSON.stringify(answers)]
+    );
+
+    res.json({ message: "Quiz submitted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
