@@ -63,6 +63,28 @@
       </div>
     </div>
 
+    <!-- ✅ Students Drawer -->
+    <div class="card drawer">
+      <div class="drawer-header" onclick="toggleDrawer('studentsDrawer')">
+        <h3>Students</h3>
+        <span class="drawer-icon">▼</span>
+      </div>
+      <div id="studentsDrawer" class="drawer-content">
+        <div id="studentList"></div>
+      </div>
+    </div>
+
+    <!-- ✅ Quizzes Drawer -->
+    <div class="card drawer">
+      <div class="drawer-header" onclick="toggleDrawer('quizzesDrawer')">
+        <h3>All Quizzes</h3>
+        <span class="drawer-icon">▼</span>
+      </div>
+      <div id="quizzesDrawer" class="drawer-content">
+        <div id="teacherQuizList"></div>
+      </div>
+    </div>
+
     <button onclick="logout()">Logout</button>
   </div>
 

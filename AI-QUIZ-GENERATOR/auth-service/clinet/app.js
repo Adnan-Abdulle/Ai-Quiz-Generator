@@ -445,6 +445,102 @@ if (assignBtn) {
   assignBtn.addEventListener("click", assignQuiz);
 }
 
+async function loadStudentsForTeacher() {
+  const studentList = document.getElementById("studentList");
+  if (!studentList) return;
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/students`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      studentList.innerHTML = `<p>${data.message || "Failed to load students"}</p>`;
+      return;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      studentList.innerHTML = "<p>No students found.</p>";
+      return;
+    }
+
+    studentList.innerHTML = data.map(user => `
+      <div class="quiz-card">
+        <p><strong>ID:</strong> ${user.id}</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Role:</strong> ${user.role}</p>
+      </div>
+    `).join("");
+  } catch (err) {
+    console.error(err);
+    studentList.innerHTML = "<p>Failed to load students</p>";
+  }
+}
+
+async function loadAllQuizzesForTeacher() {
+  const teacherQuizList = document.getElementById("teacherQuizList");
+  if (!teacherQuizList) return;
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/quizzes`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      teacherQuizList.innerHTML = `<p>${data.message || "Failed to load quizzes"}</p>`;
+      return;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      teacherQuizList.innerHTML = "<p>No quizzes found.</p>";
+      return;
+    }
+
+    teacherQuizList.innerHTML = data.map(quiz => `
+      <div class="quiz-card">
+        <p><strong>ID:</strong> ${quiz.id}</p>
+        <p><strong>Topic:</strong> ${quiz.topic}</p>
+        <p><strong>Difficulty:</strong> ${quiz.difficulty}</p>
+      </div>
+    `).join("");
+  } catch (err) {
+    console.error(err);
+    teacherQuizList.innerHTML = "<p>Failed to load quizzes</p>";
+  }
+}
+
+function toggleDrawer(drawerId) {
+  const drawer = document.getElementById(drawerId);
+  if (!drawer) return;
+
+  const header = drawer.previousElementSibling;
+
+  drawer.classList.toggle("open");
+
+  if (header) {
+    header.classList.toggle("active");
+  }
+}
+
+const role = localStorage.getItem("role");
+
+if (role === "teacher" || role === "admin") {
+  loadStudentsForTeacher();
+  loadAllQuizzesForTeacher();
+}
+
 fillResetTokenFromUrl();
 loadUserPage();
 

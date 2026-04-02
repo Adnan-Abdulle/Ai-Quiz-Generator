@@ -434,4 +434,30 @@ router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, r
   }
 });
 
+// Teacher/Admin: view all students/users
+router.get("/students", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, email, role, created_at FROM users ORDER BY id ASC"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching students:", err);
+    res.status(500).json({ message: "Failed to fetch students" });
+  }
+});
+
+// Teacher/Admin: view all quizzes
+router.get("/quizzes", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, topic, difficulty, created_at FROM quizzes ORDER BY created_at DESC"
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching quizzes:", err);
+    res.status(500).json({ message: "Failed to fetch quizzes" });
+  }
+});
+
 module.exports = router;
