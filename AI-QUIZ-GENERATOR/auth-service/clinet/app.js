@@ -296,12 +296,18 @@ quizList.appendChild(container);
 
 
 async function assignQuiz() {
-  const userId = document.getElementById("assignUserId").value;
+  const userIdsInput = document.getElementById("assignUserIds").value;
   const quizId = document.getElementById("assignQuizId").value;
   const assignMsg = document.getElementById("assignMsg");
 
-  if (!userId || !quizId) {
-    assignMsg.textContent = "Please enter both quiz ID and user ID";
+  const studentIds = userIdsInput
+    .split(",")
+    .map(id => id.trim())
+    .filter(id => id !== "")
+    .map(id => Number(id));
+
+  if (!quizId || studentIds.length === 0) {
+    assignMsg.textContent = "Please enter quiz ID and at least one user ID";
     return;
   }
 
@@ -313,8 +319,8 @@ async function assignQuiz() {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       },
       body: JSON.stringify({
-        user_id: userId,
-        quiz_id: quizId
+        quizId: Number(quizId),
+        studentIds: studentIds
       })
     });
 
@@ -327,6 +333,7 @@ async function assignQuiz() {
     assignMsg.textContent = "Failed to assign quiz";
   }
 }
+
 
 async function loadQuizzes() {
   const quizList = document.getElementById("availableQuizzes");

@@ -398,19 +398,21 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
 });
 
 router.post("/teacher/assign", verifyToken, requireAdminOrTeacher, async (req, res) => {
-  const { quiz_id, user_id } = req.body;
+  const { quizId, studentIds } = req.body;
 
-  if (!quiz_id || !user_id) {
-    return res.status(400).json({ message: "quiz_id and user_id required" });
+  if (!quizId || !Array.isArray(studentIds) || studentIds.length === 0) {
+    return res.status(400).json({ message: "quizId and studentIds are required" });
   }
 
   try {
-    await db.execute(
-      "INSERT INTO assignments (quiz_id, user_id, assigned_by) VALUES (?, ?, ?)",
-      [quiz_id, user_id, req.user.id]
-    );
+    for (const studentId of studentIds) {
+      await db.execute(
+        "INSERT INTO assignments (quiz_id, user_id, assigned_by) VALUES (?, ?, ?)",
+        [quizId, studentId, req.user.id]
+      );
+    }
 
-    res.json({ message: "Quiz assigned successfully" });
+    res.json({ message: "Quiz assigned successfully to selected students" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
