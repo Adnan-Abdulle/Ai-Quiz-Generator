@@ -158,16 +158,16 @@ button:hover {
 
 .drawer-content {
   max-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: max-height 0.35s ease, padding 0.35s ease;
   padding-top: 0;
 }
 
 .drawer-content.open {
-  max-height: 1000px;
+  max-height: 300px;
   padding-top: 12px;
 }
-
 .drawer-header.active .drawer-icon {
   transform: rotate(180deg);
 }
