@@ -13,113 +13,28 @@
   />
 </head>
 <body>
-  <div class="background-shape shape-1"></div>
-  <div class="background-shape shape-2"></div>
-  <div class="background-shape shape-3"></div>
+  <div class="container">
+    <h2>User Dashboard</h2>
+    <p class="subtitle">Stay organized and complete your assigned quizzes here.</p>
 
-  <div class="dashboard-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-logo">Q</div>
-        <div>
-          <h1>QuizFlow</h1>
-          <p>Student Portal</p>
-        </div>
+    <div class="card">
+      <h3>User Info</h3>
+      <p id="userInfo">Loading user info...</p>
+    </div>
+
+    <div class="card">
+      <h3>Quiz Space</h3>
+      <p>Open your assigned quizzes below and submit your answers when ready.</p>
+    </div>
+
+    <div class="card">
+      <h3>Available Quizzes</h3>
+      <div id="availableQuizzes">
+        <p>No quizzes assigned yet.</p>
       </div>
+    </div>
 
-      <nav class="sidebar-nav">
-        <a href="#" class="nav-item active">Dashboard</a>
-        <a href="#availableQuizzesSection" class="nav-item">Quizzes</a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button class="logout-btn" onclick="logout()">Logout</button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <section class="hero-card">
-        <div class="hero-text">
-          <p class="eyebrow">WELCOME BACK</p>
-          <h2>Ready to take your quizzes?</h2>
-          <p class="hero-subtitle">
-            Stay focused, answer confidently, and track your progress in one place.
-          </p>
-        </div>
-
-        <div class="hero-badge">
-          <span>Live Dashboard</span>
-        </div>
-      </section>
-
-      <section class="info-grid">
-        <div class="info-card glass-card">
-          <div class="card-header">
-            <h3>User Info</h3>
-            <span class="card-pill">Profile</span>
-          </div>
-          <p id="userInfo" class="user-info-text">Loading user info...</p>
-        </div>
-
-        <div class="info-card glass-card stat-card">
-          <div class="card-header">
-            <h3>Quiz Space</h3>
-            <span class="card-pill">Active</span>
-          </div>
-          <p class="stat-big">Focus Mode</p>
-          <p class="stat-sub">
-            Open a quiz below and submit your answers when you’re ready.
-          </p>
-        </div>
-      </section>
-
-      <section class="glass-card quizzes-section" id="availableQuizzesSection">
-        <div class="section-header">
-          <div>
-            <p class="section-label">AVAILABLE NOW</p>
-            <h3>Available Quizzes</h3>
-          </div>
-        </div>
-
-        <div id="availableQuizzes">
-          <div class="quiz-card">
-            <div class="quiz-top">
-              <div>
-                <h4>Quiz Title</h4>
-                <p class="quiz-description">
-                  Answer the following questions carefully and submit when finished.
-                </p>
-              </div>
-              <span class="quiz-tag">Open</span>
-            </div>
-
-            <form class="quiz-form">
-              <div class="question-block">
-                <label><strong>Question 1:</strong> What is HTML used for?</label>
-                <textarea
-                  name="answer1"
-                  rows="4"
-                  placeholder="Type your answer here..."
-                  required
-                ></textarea>
-              </div>
-
-              <div class="question-block">
-                <label><strong>Question 2:</strong> What is the difference between HTML and CSS?</label>
-                <textarea
-                  name="answer2"
-                  rows="4"
-                  placeholder="Type your answer here..."
-                  required
-                ></textarea>
-              </div>
-
-              <button type="submit" class="submit-btn">Submit Quiz</button>
-            </form>
-          </div>
-        </div>
-      </section>
-    </main>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 
   <script src="app.js"></script>

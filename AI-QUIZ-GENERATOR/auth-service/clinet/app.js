@@ -263,13 +263,25 @@ async function generate() {
 
     generateMsg.textContent = "Quiz generated successfully";
 
-    const ul = document.createElement("ul");
+  const container = document.createElement("div");
 
-    data.questions.forEach(q => {
-      const li = document.createElement("li");
-      li.textContent = q;
-      ul.appendChild(li);
-    });
+const title = document.createElement("h4");
+title.textContent = `Quiz ID: ${data.quizId || data.id}`;
+
+container.appendChild(title);
+
+const ul = document.createElement("ul");
+
+data.questions.forEach(q => {
+  const li = document.createElement("li");
+  li.textContent = q;
+  ul.appendChild(li);
+});
+
+container.appendChild(ul);
+
+quizList.innerHTML = "";
+quizList.appendChild(container);
 
     quizList.innerHTML = "";
     quizList.appendChild(ul);
@@ -281,6 +293,41 @@ async function generate() {
   }
 }
 
+
+
+async function assignQuiz() {
+  const userId = document.getElementById("assignUserId").value;
+  const quizId = document.getElementById("assignQuizId").value;
+  const assignMsg = document.getElementById("assignMsg");
+
+  if (!userId || !quizId) {
+    assignMsg.textContent = "Please enter both quiz ID and user ID";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/teacher/assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        quiz_id: quizId
+      })
+    });
+
+    const data = await res.json();
+    assignMsg.textContent = data.message || "Assignment completed";
+
+    console.log("Assign response:", data);
+  } catch (err) {
+    console.error("Assign error:", err);
+    assignMsg.textContent = "Failed to assign quiz";
+  }
+}
+
 async function loadQuizzes() {
   const quizList = document.getElementById("availableQuizzes");
   if (!quizList) return;
@@ -288,14 +335,21 @@ async function loadQuizzes() {
   const token = localStorage.getItem("token");
 
   try {
-    const res = await fetch(`${API_BASE}/auth/quizzes`, {
+    const res = await fetch(`${API_BASE}/auth/user/quizzes`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     });
 
     const quizzes = await res.json();
+    console.log("Quizzes:", quizzes);
     quizList.innerHTML = "";
+
+
+    if (!Array.isArray(quizzes) || quizzes.length === 0) {
+  quizList.innerHTML = "<p>No quizzes assigned yet.</p>";
+  return;
+}
 
     quizzes.forEach((quiz, quizIndex) => {
       const container = document.createElement("div");
@@ -385,7 +439,13 @@ async function loadQuizzes() {
 
 }
 
+const assignBtn = document.getElementById("assignQuizBtn");
+
+if (assignBtn) {
+  assignBtn.addEventListener("click", assignQuiz);
+}
+
 fillResetTokenFromUrl();
 loadUserPage();
-loadAdminPage();
+
 loadQuizzes();

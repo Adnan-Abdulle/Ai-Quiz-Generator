@@ -355,19 +355,20 @@ router.post("/admin/create-quiz", verifyToken, requireAdminOrTeacher, async (req
     }
 });
 
-router.get("/quizzes", verifyToken, async (req, res) => {
-    try {
-        const [rows] = await db.execute(
-            `SELECT id, topic, difficulty, question_count, questions, created_at
-       FROM quizzes
-       ORDER BY created_at DESC`
-        );
+router.get("/user/quizzes", verifyToken, async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT q.*
+      FROM quizzes q
+      JOIN assignments a ON q.id = a.quiz_id
+      WHERE a.user_id = ?
+      ORDER BY q.created_at DESC
+    `, [req.user.id]);
 
-        return res.json(rows);
-    } catch (err) {
-        console.error("Get quizzes error:", err);
-        return res.status(500).json({ message: "Server error", error: err.message });
-    }
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 router.post("/submit-quiz", verifyToken, async (req, res) => {
@@ -384,9 +385,51 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
       [userId, quiz_id, JSON.stringify(answers)]
     );
 
+    await db.execute(
+      "UPDATE assignments SET status = 'completed' WHERE quiz_id = ? AND user_id = ?",
+      [quiz_id, userId]
+    );
+
     res.json({ message: "Quiz submitted successfully" });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/teacher/assign", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  const { quiz_id, user_id } = req.body;
+
+  if (!quiz_id || !user_id) {
+    return res.status(400).json({ message: "quiz_id and user_id required" });
+  }
+
+  try {
+    await db.execute(
+      "INSERT INTO assignments (quiz_id, user_id, assigned_by) VALUES (?, ?, ?)",
+      [quiz_id, user_id, req.user.id]
+    );
+
+    res.json({ message: "Quiz assigned successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT u.email, q.topic, a.status, s.submitted_at
+      FROM assignments a
+      JOIN users u ON a.user_id = u.id
+      JOIN quizzes q ON a.quiz_id = q.id
+      LEFT JOIN submissions s ON s.quiz_id = q.id AND s.user_id = u.id
+      ORDER BY s.submitted_at DESC
+    `);
+
+    res.json(rows);
+  } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
