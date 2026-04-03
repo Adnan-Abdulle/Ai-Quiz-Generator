@@ -284,76 +284,74 @@ router.get("/admin/users", verifyToken, requireAdmin, async (req, res) => {
     }
 });
 
-router.post("/admin/create-quiz", verifyToken, requireAdminOrTeacher, async (req, res) => {
-    try {
-        const { topic, difficulty, count } = req.body;
 
-        if (!topic || !difficulty || !count) {
-            return res.status(400).json({ message: "Topic, difficulty, and count are required" });
-        }
+router.post("/admin/generate-preview", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  try {
+    const { topic, difficulty, count } = req.body;
 
-        const [userRows] = await db.execute(
-            "SELECT api_calls_used FROM users WHERE id = ?",
-            [req.user.id]
-        );
-
-        const callsUsed = userRows[0].api_calls_used;
-        let warning = null;
-
-        if (callsUsed >= 20) {
-            warning = "You have reached the free API limit (20 calls)";
-        }
-
-        const aiRes = await fetch("https://aacomp4537.com/ai/generate", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ topic, difficulty, count })
-        });
-
-        const raw = await aiRes.text();
-        console.log("AI STATUS:", aiRes.status);
-        console.log("AI RAW:", raw);
-
-        let aiData;
-        try {
-            aiData = JSON.parse(raw);
-        } catch {
-            return res.status(500).json({
-                message: "AI returned invalid JSON",
-                raw
-            });
-        }
-
-        if (!aiRes.ok) {
-            return res.status(aiRes.status).json({
-                message: "AI generation failed",
-                error: aiData.error || "Unknown error"
-            });
-        }
-
-        await db.execute(
-            `INSERT INTO quizzes (topic, difficulty, question_count, questions, created_by)
-             VALUES (?, ?, ?, ?, ?)`,
-            [topic, difficulty, Number(count), JSON.stringify(aiData.questions), req.user.id]
-        );
-
-        await db.execute(
-            "UPDATE users SET api_calls_used = api_calls_used + 1 WHERE id = ?",
-            [req.user.id]
-        );
-
-        return res.status(201).json({
-            message: "Quiz created successfully",
-            questions: aiData.questions,
-            warning
-        });
-    } catch (err) {
-        console.error("Create quiz error:", err);
-        return res.status(500).json({ message: "Server error", error: err.message });
+    if (!topic || !difficulty || !count) {
+      return res.status(400).json({ message: "Topic, difficulty, and count are required" });
     }
+
+    const aiRes = await fetch("https://aacomp4537.com/ai/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ topic, difficulty, count })
+    });
+
+    const raw = await aiRes.text();
+
+    let aiData;
+    try {
+      aiData = JSON.parse(raw);
+    } catch {
+      return res.status(500).json({ message: "AI returned invalid JSON" });
+    }
+
+    if (!aiRes.ok) {
+      return res.status(aiRes.status).json({
+        message: "AI generation failed",
+        error: aiData.error || "Unknown error"
+      });
+    }
+
+    return res.json({
+      questions: aiData.questions
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
 });
+
+
+router.post("/admin/publish-quiz", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  try {
+    const { topic, difficulty, questions } = req.body;
+
+    if (!topic || !difficulty || !questions) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    await db.execute(
+      `INSERT INTO quizzes (topic, difficulty, question_count, questions, created_by)
+       VALUES (?, ?, ?, ?, ?)`,
+      [topic, difficulty, questions.length, JSON.stringify(questions), req.user.id]
+    );
+
+    return res.status(201).json({
+      message: "Quiz published successfully"
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 router.get("/user/quizzes", verifyToken, async (req, res) => {
   try {
@@ -462,4 +460,28 @@ router.get("/quizzes", verifyToken, requireAdminOrTeacher, async (req, res) => {
   }
 });
 
+router.get("/teacher/assignable-students/:quizId", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  const { quizId } = req.params;
+
+  try {
+    const [rows] = await db.execute(`
+      SELECT u.id, u.email, u.role
+      FROM users u
+      WHERE u.role = 'user'
+      AND u.id NOT IN (
+        SELECT a.user_id
+        FROM assignments a
+        WHERE a.quiz_id = ?
+      )
+      ORDER BY u.id ASC
+    `, [quizId]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching assignable students:", err);
+    res.status(500).json({ message: "Failed to fetch assignable students" });
+  }
+});
+
 module.exports = router;
+
