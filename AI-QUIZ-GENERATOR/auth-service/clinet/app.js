@@ -1,6 +1,12 @@
-const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
-// const API_BASE = "http://localhost:4000";
+// const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
+const API_BASE = "http://localhost:4000";
 
+
+let currentQuizPreview = null;
+let selectedQuizId = null;
+let selectedQuizTitle = "";
+let selectedStudentIds = [];
+let assignableStudents = [];
 
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {
@@ -224,6 +230,7 @@ const generateBtn = document.getElementById("generateQuizBtn");
 if (generateBtn) {
   generateBtn.addEventListener("click", generate);
 }
+
 async function generate() {
   const topic = document.getElementById("quizTopic").value;
   const difficulty = document.getElementById("quizDifficulty").value;
@@ -236,7 +243,7 @@ async function generate() {
   generateMsg.textContent = "Generating...";
 
   try {
-    const res = await fetch(`${API_BASE}/auth/admin/create-quiz`, {
+    const res = await fetch(`${API_BASE}/auth/admin/generate-preview`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -248,51 +255,107 @@ async function generate() {
     const data = await res.json();
 
     if (!res.ok) {
-      generateMsg.textContent = data.error || data.message || "Failed to generate quiz";
+      generateMsg.textContent = data.error || data.message || "Failed to generate quiz preview";
       return;
     }
 
-    if (data.warning) {
-      const warned = localStorage.getItem("apiLimitWarned");
+    currentQuizPreview = {
+      topic,
+      difficulty,
+      questions: data.questions
+    };
 
-      if (!warned) {
-        alert(data.warning);
-        localStorage.setItem("apiLimitWarned", "true");
-      }
-    }
+    generateMsg.textContent = "Quiz preview generated successfully";
 
-    generateMsg.textContent = "Quiz generated successfully";
+    const container = document.createElement("div");
 
-  const container = document.createElement("div");
+    const title = document.createElement("h4");
+    title.textContent = `Preview: ${topic} (${difficulty})`;
+    container.appendChild(title);
 
-const title = document.createElement("h4");
-title.textContent = `Quiz ID: ${data.quizId || data.id}`;
+    const ul = document.createElement("ul");
 
-container.appendChild(title);
+    data.questions.forEach((q) => {
+      const li = document.createElement("li");
+      li.textContent = q;
+      ul.appendChild(li);
+    });
 
-const ul = document.createElement("ul");
+    container.appendChild(ul);
+    const publishBtn = document.createElement("button");
+    publishBtn.textContent = "Publish";
+    publishBtn.onclick = publishQuiz;
 
-data.questions.forEach(q => {
-  const li = document.createElement("li");
-  li.textContent = q;
-  ul.appendChild(li);
-});
+    const discardBtn = document.createElement("button");
+    discardBtn.textContent = "Do Not Publish";
+    discardBtn.onclick = discardQuiz;
 
-container.appendChild(ul);
+    const btnContainer = document.createElement("div");
+    btnContainer.style.marginTop = "10px";
+    btnContainer.appendChild(publishBtn);
+    btnContainer.appendChild(discardBtn);
 
-quizList.innerHTML = "";
-quizList.appendChild(container);
+    container.appendChild(btnContainer);
+    publishBtn.classList.add("publish-btn");
+    discardBtn.classList.add("discard-btn");
+    btnContainer.classList.add("preview-btn-container");
 
     quizList.innerHTML = "";
-    quizList.appendChild(ul);
+    quizList.appendChild(container);
 
-    await loadAdminPage();
   } catch (error) {
-    generateMsg.textContent = "Server error while generating quiz";
+    generateMsg.textContent = "Server error while generating quiz preview";
     console.error(error);
   }
 }
 
+async function publishQuiz() {
+  const generateMsg = document.getElementById("generateMsg");
+
+  if (!currentQuizPreview) {
+    generateMsg.textContent = "No quiz to publish";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/admin/publish-quiz`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify(currentQuizPreview)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      generateMsg.textContent = data.message || "Failed to publish quiz";
+      return;
+    }
+
+    generateMsg.textContent = "Quiz published successfully";
+
+    currentQuizPreview = null;
+    document.getElementById("quizList").innerHTML = "";
+
+
+    loadAllQuizzesForTeacher();
+
+  } catch (err) {
+    console.error(err);
+    generateMsg.textContent = "Server error while publishing";
+  }
+}
+
+function discardQuiz() {
+  const generateMsg = document.getElementById("generateMsg");
+
+  currentQuizPreview = null;
+  document.getElementById("quizList").innerHTML = "";
+
+  generateMsg.textContent = "Quiz discarded";
+}
 
 
 async function assignQuiz() {
@@ -520,6 +583,9 @@ async function loadAllQuizzesForTeacher() {
         <p><strong>ID:</strong> ${quiz.id}</p>
         <p><strong>Topic:</strong> ${quiz.topic}</p>
         <p><strong>Difficulty:</strong> ${quiz.difficulty}</p>
+        <button onclick="openAssignModal(${quiz.id}, '${quiz.topic}', '${quiz.difficulty}')">
+  Assign
+</button>
       </div>
     `).join("");
   } catch (err) {
@@ -528,6 +594,84 @@ async function loadAllQuizzesForTeacher() {
   }
 }
 
+async function openAssignModal(quizId, topic, difficulty) {
+  selectedQuizId = quizId;
+  selectedStudentIds = [];
+
+  const modal = document.getElementById("assignModal");
+  const title = document.getElementById("assignModalTitle");
+  const msg = document.getElementById("assignModalMsg");
+
+  title.textContent = `Assign Quiz: ${topic} (${difficulty})`;
+  msg.textContent = "";
+
+  await renderStudentsForAssignModal();
+
+  modal.classList.remove("hidden");
+}
+
+function closeAssignModal() {
+  const modal = document.getElementById("assignModal");
+  const msg = document.getElementById("assignModalMsg");
+
+  selectedQuizId = null;
+  selectedStudentIds = [];
+  msg.textContent = "";
+
+  modal.classList.add("hidden");
+}
+
+async function renderStudentsForAssignModal() {
+  const container = document.getElementById("assignStudentList");
+  const token = localStorage.getItem("token");
+
+  container.innerHTML = "<p>Loading students...</p>";
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/teacher/assignable-students/${selectedQuizId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      container.innerHTML = `<p>${data.message || "Failed to load students"}</p>`;
+      return;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = "<p>No students found.</p>";
+      return;
+    }
+
+    assignableStudents = data.filter(user => user.role === "user");
+    displayStudentCards();
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Failed to load students</p>";
+  }
+}
+function displayStudentCards() {
+  const container = document.getElementById("assignStudentList");
+
+  if (!assignableStudents.length) {
+    container.innerHTML = "<p>No students found.</p>";
+    return;
+  }
+
+  container.innerHTML = assignableStudents.map(user => `
+    <div
+      class="student-select-card ${selectedStudentIds.includes(user.id) ? "selected" : ""}"
+      onclick="toggleStudentSelection(${user.id})"
+    >
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>ID:</strong> ${user.id}</p>
+    </div>
+  `).join("");
+}
 function toggleDrawer(drawerId) {
   const drawer = document.getElementById(drawerId);
   if (!drawer) return;
@@ -539,6 +683,67 @@ function toggleDrawer(drawerId) {
   if (header) {
     header.classList.toggle("active");
   }
+}
+
+function toggleStudentSelection(studentId) {
+  if (selectedStudentIds.includes(studentId)) {
+    selectedStudentIds = selectedStudentIds.filter(id => id !== studentId);
+  } else {
+    selectedStudentIds.push(studentId);
+  }
+
+  displayStudentCards();
+}
+
+async function assignSelectedStudents() {
+  const msg = document.getElementById("assignModalMsg");
+
+  if (!selectedQuizId) {
+    msg.textContent = "No quiz selected.";
+    return;
+  }
+
+  if (selectedStudentIds.length === 0) {
+    msg.textContent = "Please select at least one student.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/teacher/assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({
+        quizId: selectedQuizId,
+        studentIds: selectedStudentIds
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      msg.textContent = data.message || "Failed to assign quiz.";
+      return;
+    }
+
+    msg.textContent = data.message || "Quiz assigned successfully.";
+
+    setTimeout(() => {
+      closeAssignModal();
+    }, 1000);
+
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "Server error while assigning quiz.";
+  }
+}
+
+const confirmAssignBtn = document.getElementById("confirmAssignBtn");
+
+if (confirmAssignBtn) {
+  confirmAssignBtn.addEventListener("click", assignSelectedStudents);
 }
 
 const role = localStorage.getItem("role");
