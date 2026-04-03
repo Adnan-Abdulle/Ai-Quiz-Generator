@@ -8,6 +8,8 @@ const { verifyToken, requireAdmin, requireAdminOrTeacher } = require("../middlew
 
 const router = express.Router();
 
+const fetch = require("node-fetch");
+
 //SMTH setting
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST, // smtp.mail.yahoo.com
@@ -372,29 +374,65 @@ router.get("/user/quizzes", verifyToken, async (req, res) => {
 });
 
 router.post("/submit-quiz", verifyToken, async (req, res) => {
-  const { quiz_id, answers } = req.body;
-  const userId = req.user.id;
+    try {
+        const { quiz_id, answers } = req.body;
+        const user_id = req.user.id;
 
-  if (!quiz_id || !answers || !Array.isArray(answers)) {
-    return res.status(400).json({ message: "quiz_id and answers are required" });
-  }
+        const [rows] = await db.execute(
+            "SELECT * FROM quizzes WHERE id = ?",
+            [quiz_id]
+        );
 
-  try {
-    await db.execute(
-      "INSERT INTO submissions (user_id, quiz_id, answers) VALUES (?, ?, ?)",
-      [userId, quiz_id, JSON.stringify(answers)]
-    );
+        const quiz = rows[0];
 
-    await db.execute(
-      "UPDATE assignments SET status = 'completed' WHERE quiz_id = ? AND user_id = ?",
-      [quiz_id, userId]
-    );
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found" });
+        }
 
-    res.json({ message: "Quiz submitted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
+        const questions = JSON.parse(quiz.questions);
+
+        const aiRes = await fetch("http://localhost:5001/ai/grade", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                questions,
+                answers
+            })
+        });
+
+        const raw = await aiRes.text();
+        console.log("AI RAW RESPONSE:", raw);
+
+        let aiData;
+        try {
+            aiData = JSON.parse(raw);
+        } catch {
+            return res.status(500).json({
+                error: "AI returned invalid JSON",
+                raw
+            });
+        }
+
+        console.log("AI RESULT:", aiData);
+
+        await db.run(
+            `INSERT INTO results (user_id, quiz_id, score, feedback)
+       VALUES (?, ?, ?, ?)`,
+            [user_id, quiz_id, aiData.score, aiData.feedback]
+        );
+
+        res.json({
+            message: "Quiz submitted successfully",
+            score: aiData.score,
+            feedback: aiData.feedback
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 router.post("/teacher/assign", verifyToken, requireAdminOrTeacher, async (req, res) => {

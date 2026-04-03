@@ -424,7 +424,23 @@ async function loadQuizzes() {
           const data = await res.json();
 
           if (res.ok) {
+            // ✅ keep popup
             alert("Quiz submitted successfully!");
+
+            // ✅ show result from backend
+            const resultDiv = document.createElement("div");
+            resultDiv.style.marginTop = "15px";
+            resultDiv.style.padding = "12px";
+            resultDiv.style.background = "#e8f5e9";
+            resultDiv.style.borderRadius = "10px";
+
+            resultDiv.innerHTML = `
+              <h4>Your Result</h4>
+              <p><strong>Score:</strong> ${data.score}</p>
+              <p><strong>Feedback:</strong> ${data.feedback}</p>
+  `         ;
+
+            form.appendChild(resultDiv);
           } else {
             alert(data.message || "Failed to submit quiz");
           }
@@ -528,6 +544,41 @@ async function loadAllQuizzesForTeacher() {
   }
 }
 
+async function loadResults() {
+  const resultsList = document.getElementById("resultsList");
+  if (!resultsList) return;
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/results`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      resultsList.innerHTML = "<p>No results yet.</p>";
+      return;
+    }
+
+    resultsList.innerHTML = data.map(r => `
+      <div class="quiz-card">
+        <p><strong>User:</strong> ${r.email}</p>
+        <p><strong>Quiz ID:</strong> ${r.quiz_id}</p>
+        <p><strong>Score:</strong> ${r.score}</p>
+        <p><strong>Feedback:</strong> ${r.feedback}</p>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error(err);
+    resultsList.innerHTML = "<p>Failed to load results</p>";
+  }
+}
+
 function toggleDrawer(drawerId) {
   const drawer = document.getElementById(drawerId);
   if (!drawer) return;
@@ -546,6 +597,7 @@ const role = localStorage.getItem("role");
 if (role === "teacher" || role === "admin") {
   loadStudentsForTeacher();
   loadAllQuizzesForTeacher();
+  loadResults();
 }
 
 fillResetTokenFromUrl();
