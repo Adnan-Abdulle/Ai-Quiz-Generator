@@ -181,11 +181,10 @@ Format exactly:
         }
 
         res.json({
-            score: result.score ?? `0/${questions.length}`,
-            feedback: result.feedback ?? "No feedback generated"
+            score: result.score || result.Score || `0/${questions.length}`,
+            feedback: result.feedback || result.Feedback || "No feedback generated"
         });
 
-        res.json(result);
 
     } catch (error) {
         console.error("GRADING ERROR:", error);

@@ -1,5 +1,5 @@
-const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
-// const API_BASE = "http://localhost:4000";
+// const API_BASE = "https://ai-quiz-generator-2-hk2a.onrender.com";
+const API_BASE = "http://localhost:4000";
 
 
 const registerForm = document.getElementById("registerForm");
@@ -422,6 +422,7 @@ async function loadQuizzes() {
           });
 
           const data = await res.json();
+          console.log("SUBMIT RESPONSE:", data);
 
           if (res.ok) {
             // ✅ keep popup
