@@ -433,7 +433,7 @@ async function loadResults() {
     const token = localStorage.getItem("token");
 
     try {
-        const res = await fetch(`${API_BASE}/auth/results`, {
+        const res = await fetch(`${API_BASE}/auth/teacher/results`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }

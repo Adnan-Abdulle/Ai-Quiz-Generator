@@ -161,11 +161,11 @@ Format exactly:
         let result;
 
         try {
-            // Try direct parse
+           
             result = JSON.parse(text);
         } catch {
             try {
-                // Extract JSON manually (fix for AI messy output)
+             
                 const jsonMatch = text.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
                     result = JSON.parse(jsonMatch[0]);

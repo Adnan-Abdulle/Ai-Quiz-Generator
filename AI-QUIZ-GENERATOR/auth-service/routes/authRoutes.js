@@ -476,16 +476,27 @@ router.post("/teacher/assign", verifyToken, requireAdminOrTeacher, async (req, r
 router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, res) => {
     try {
         const [rows] = await db.execute(`
-      SELECT u.email, q.topic, a.status, s.submitted_at
-      FROM assignments a
-      JOIN users u ON a.user_id = u.id
-      JOIN quizzes q ON a.quiz_id = q.id
-      LEFT JOIN submissions s ON s.quiz_id = q.id AND s.user_id = u.id
-      ORDER BY s.submitted_at DESC
+      SELECT 
+        u.email,
+        q.id AS quiz_id,
+        q.topic,
+        r.score,
+        r.feedback
+      FROM results r
+      JOIN users u ON r.user_id = u.id
+      JOIN quizzes q ON r.quiz_id = q.id
+      JOIN (
+        SELECT user_id, quiz_id, MAX(id) AS latest_id
+        FROM results
+        GROUP BY user_id, quiz_id
+      ) latest
+        ON r.id = latest.latest_id
+      ORDER BY q.created_at DESC
     `);
 
         res.json(rows);
     } catch (err) {
+        console.error("Teacher results error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

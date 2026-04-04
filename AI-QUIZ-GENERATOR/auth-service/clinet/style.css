@@ -3,26 +3,21 @@ body {
   background: #f1f5f9;
   color: #374151;
   margin: 0;
-
-  /* 🔥 center everything like a mobile app */
   display: flex;
   justify-content: center;
 }
 
-/* Layout */
+
 .container {
   width: 100%;
   max-width: 420px;
   margin: 40px auto;
   padding: 18px;
-
-  /* 🔥 gives "app screen" feel */
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-/* Cards */
 .card {
   background: #ffffff;
   border-radius: 16px;
@@ -31,7 +26,6 @@ body {
   border: 1px solid #eef2f7;
 }
 
-/* Titles */
 h2 {
   font-size: 1.5rem;
   margin-bottom: 6px;
@@ -48,7 +42,6 @@ h2 {
   margin-bottom: 12px;
 }
 
-/* Inputs */
 input,
 select,
 textarea {
@@ -69,7 +62,6 @@ textarea:focus {
   background: #ffffff;
 }
 
-/* Buttons */
 button {
   width: 100%;
   padding: 12px;
@@ -86,7 +78,7 @@ button:hover {
   background: #c7d2fe;
 }
 
-/* Quiz cards */
+
 .quiz-card {
   background: #fafafa;
   border-radius: 14px;
@@ -94,7 +86,7 @@ button:hover {
   border: 1px solid #f1f5f9;
 }
 
-/* Question block */
+
 .question-block {
   margin-bottom: 12px;
 }
@@ -103,7 +95,7 @@ button:hover {
   background: #f3f4f6;
 }
 
-/* Logout */
+
 .logout-btn {
   background: #fecaca;
   color: #7f1d1d;
@@ -113,7 +105,7 @@ button:hover {
   background: #fca5a5;
 }
 
-/* 🔥 subtle pastel variation */
+
 .card:nth-child(odd) {
   background: #fdf4ff;
 }
@@ -122,7 +114,6 @@ button:hover {
   background: #eff6ff;
 }
 
-/* Mobile spacing */
 @media (max-width: 480px) {
   body {
     padding: 10px;
