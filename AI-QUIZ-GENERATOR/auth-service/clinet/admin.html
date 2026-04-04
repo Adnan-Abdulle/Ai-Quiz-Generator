@@ -31,10 +31,6 @@
       <p id="generateMsg"></p>
     </div>
 
-    <div class="card">
-      <h3>Admin Info</h3>
-      <pre id="adminInfo"></pre>
-    </div>
 
     <div class="card">
       <h3>Generated Quizzes</h3>
@@ -43,42 +39,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <h3>Assign Quiz</h3>
-
-      <label for="assignQuizId">Quiz ID</label>
-      <input type="number" id="assignQuizId" placeholder="Enter quiz ID" />
-
-<label for="assignUserIds">User IDs</label>
-<input
-  type="text"
-  id="assignUserIds"
-  placeholder="Enter user IDs separated by commas (e.g. 1,2,3)"
-/>
-
-      <button id="assignQuizBtn">Assign Quiz</button>
-      <p id="assignMsg"></p>
-    </div>
-
-    <div class="card">
-      <h3>Student Results</h3>
-      <div id="resultsList">
-        <p>No results yet.</p>
-      </div>
-    </div>
-
-    <!-- ✅ Students Drawer -->
-    <div class="card drawer">
-      <div class="drawer-header" onclick="toggleDrawer('studentsDrawer')">
-        <h3>Students</h3>
-        <span class="drawer-icon">▼</span>
-      </div>
-      <div id="studentsDrawer" class="drawer-content">
-        <div id="studentList"></div>
-      </div>
-    </div>
-
-    <!-- ✅ Quizzes Drawer -->
     <div class="card drawer">
       <div class="drawer-header" onclick="toggleDrawer('quizzesDrawer')">
         <h3>All Quizzes</h3>
@@ -89,9 +49,54 @@
       </div>
     </div>
 
+
+<div class="card drawer">
+  <div class="drawer-header" onclick="toggleDrawer('resultsDrawer')">
+    <h3>Student Results</h3>
+    <span class="drawer-icon">▼</span>
+  </div>
+
+  <div id="resultsDrawer" class="drawer-content">
+    <div id="resultsList">
+      <p>No results yet.</p>
+    </div>
+  </div>
+</div>
+
+    <div class="card drawer">
+      <div class="drawer-header" onclick="toggleDrawer('studentsDrawer')">
+        <h3>Students</h3>
+        <span class="drawer-icon">▼</span>
+      </div>
+      <div id="studentsDrawer" class="drawer-content">
+        <div id="studentList"></div>
+      </div>
+    </div>
+   
+
     <button onclick="logout()">Logout</button>
   </div>
 
-  <script src="app.js"></script>
+  <div id="assignModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="assignModalTitle">Assign Quiz</h3>
+  
+      <div id="assignStudentList">
+        <p>No students found.</p>
+      </div>
+  
+      <div class="modal-actions">
+        <button id="confirmAssignBtn">Assign Selected</button>
+        <button type="button" onclick="closeAssignModal()">Cancel</button>
+      </div>
+  
+      <p id="assignModalMsg"></p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+  sc
 </body>
 </html>

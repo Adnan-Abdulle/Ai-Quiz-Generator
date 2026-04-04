@@ -3,26 +3,21 @@ body {
   background: #f1f5f9;
   color: #374151;
   margin: 0;
-
-  /* 🔥 center everything like a mobile app */
   display: flex;
   justify-content: center;
 }
 
-/* Layout */
+
 .container {
   width: 100%;
   max-width: 420px;
   margin: 40px auto;
   padding: 18px;
-
-  /* 🔥 gives "app screen" feel */
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-/* Cards */
 .card {
   background: #ffffff;
   border-radius: 16px;
@@ -31,7 +26,6 @@ body {
   border: 1px solid #eef2f7;
 }
 
-/* Titles */
 h2 {
   font-size: 1.5rem;
   margin-bottom: 6px;
@@ -48,7 +42,6 @@ h2 {
   margin-bottom: 12px;
 }
 
-/* Inputs */
 input,
 select,
 textarea {
@@ -69,7 +62,6 @@ textarea:focus {
   background: #ffffff;
 }
 
-/* Buttons */
 button {
   width: 100%;
   padding: 12px;
@@ -86,7 +78,7 @@ button:hover {
   background: #c7d2fe;
 }
 
-/* Quiz cards */
+
 .quiz-card {
   background: #fafafa;
   border-radius: 14px;
@@ -94,7 +86,7 @@ button:hover {
   border: 1px solid #f1f5f9;
 }
 
-/* Question block */
+
 .question-block {
   margin-bottom: 12px;
 }
@@ -103,7 +95,7 @@ button:hover {
   background: #f3f4f6;
 }
 
-/* Logout */
+
 .logout-btn {
   background: #fecaca;
   color: #7f1d1d;
@@ -113,7 +105,7 @@ button:hover {
   background: #fca5a5;
 }
 
-/* 🔥 subtle pastel variation */
+
 .card:nth-child(odd) {
   background: #fdf4ff;
 }
@@ -122,7 +114,6 @@ button:hover {
   background: #eff6ff;
 }
 
-/* Mobile spacing */
 @media (max-width: 480px) {
   body {
     padding: 10px;
@@ -170,4 +161,113 @@ button:hover {
 }
 .drawer-header.active .drawer-icon {
   transform: rotate(180deg);
+}
+.preview-btn-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.publish-btn,
+.discard-btn {
+  flex: 1;
+}
+
+.discard-btn {
+  background-color: #ddd;
+  color: #333;
+}
+
+#assignStudentList {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  width: 90%;
+  max-width: 500px;
+  height: 80vh;
+
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-actions {
+  background: #ffffff;
+  padding-top: 12px;
+
+  display: flex;
+  gap: 12px;
+
+  border-top: 1px solid #eee;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+.student-select-card {
+  background: #fafafa;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.student-select-card:hover {
+  border-color: #c7d2fe;
+  background: #f8faff;
+}
+
+.student-select-card.selected {
+  border-color: #818cf8;
+  background: #e0e7ff;
+}
+
+.student-select-card p {
+  margin: 4px 0;
+}
+.quiz-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.quiz-actions button {
+  flex: 1;
+  width: auto;
+
+}
+
+.delete-btn {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.delete-btn:hover {
+  background: #fca5a5;
 }
