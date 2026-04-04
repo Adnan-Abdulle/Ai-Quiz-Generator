@@ -583,9 +583,10 @@ async function loadAllQuizzesForTeacher() {
         <p><strong>ID:</strong> ${quiz.id}</p>
         <p><strong>Topic:</strong> ${quiz.topic}</p>
         <p><strong>Difficulty:</strong> ${quiz.difficulty}</p>
-        <button onclick="openAssignModal(${quiz.id}, '${quiz.topic}', '${quiz.difficulty}')">
-  Assign
-</button>
+         <div class="quiz-actions">
+        <button onclick="openAssignModal(${quiz.id}, '${quiz.topic}', '${quiz.difficulty}')"> Assign </button>
+        <button onclick="deleteQuiz(${quiz.id})" class="delete-btn"> Delete </button>
+      </div>
       </div>
     `).join("");
   } catch (err) {
@@ -751,6 +752,33 @@ const role = localStorage.getItem("role");
 if (role === "teacher" || role === "admin") {
   loadStudentsForTeacher();
   loadAllQuizzesForTeacher();
+}
+
+async function deleteQuiz(quizId) {
+  const confirmDelete = confirm("Are you sure you want to delete this quiz?");
+  if (!confirmDelete) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/admin/delete-quiz/${quizId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Failed to delete quiz");
+      return;
+    }
+
+    loadAllQuizzesForTeacher();
+
+  } catch (err) {
+    console.error(err);
+    alert("Server error while deleting quiz");
+  }
 }
 
 fillResetTokenFromUrl();
