@@ -80,6 +80,7 @@ async function loadQuizzes() {
 
             form.appendChild(submitBtn);
 
+            // 🚀 Handle submit
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
 
@@ -104,9 +105,26 @@ async function loadQuizzes() {
                     });
 
                     const data = await res.json();
+                    console.log("SUBMIT RESPONSE:", data);
 
                     if (res.ok) {
+                        // ✅ keep popup
                         alert("Quiz submitted successfully!");
+
+                        // ✅ show result from backend
+                        const resultDiv = document.createElement("div");
+                        resultDiv.style.marginTop = "15px";
+                        resultDiv.style.padding = "12px";
+                        resultDiv.style.background = "#e8f5e9";
+                        resultDiv.style.borderRadius = "10px";
+
+                        resultDiv.innerHTML = `
+              <h4>Your Result</h4>
+              <p><strong>Score:</strong> ${data.score}</p>
+              <p><strong>Feedback:</strong> ${data.feedback}</p>
+  `         ;
+
+                        form.appendChild(resultDiv);
                     } else {
                         alert(data.message || "Failed to submit quiz");
                     }
@@ -126,6 +144,12 @@ async function loadQuizzes() {
         console.error(err);
     }
 
+}
+
+const assignBtn = document.getElementById("assignQuizBtn");
+
+if (assignBtn) {
+    assignBtn.addEventListener("click", assignQuiz);
 }
 
 const role = localStorage.getItem("role");

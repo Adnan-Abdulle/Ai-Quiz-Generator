@@ -426,9 +426,45 @@ async function deleteQuiz(quizId) {
     }
 }
 
+async function loadResults() {
+    const resultsList = document.getElementById("resultsList");
+    if (!resultsList) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+        const res = await fetch(`${API_BASE}/auth/results`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+            resultsList.innerHTML = "<p>No results yet.</p>";
+            return;
+        }
+
+        resultsList.innerHTML = data.map(r => `
+      <div class="quiz-card">
+        <p><strong>User:</strong> ${r.email}</p>
+        <p><strong>Quiz ID:</strong> ${r.quiz_id}</p>
+        <p><strong>Score:</strong> ${r.score}</p>
+        <p><strong>Feedback:</strong> ${r.feedback}</p>
+      </div>
+    `).join("");
+
+    } catch (err) {
+        console.error(err);
+        resultsList.innerHTML = "<p>Failed to load results</p>";
+    }
+}
+
 const role = localStorage.getItem("role");
 if (role === "teacher" || role === "admin") {
     loadAdminPage();
+    loadResults();
     loadStudentsForTeacher();
     loadAllQuizzesForTeacher();
 }

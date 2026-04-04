@@ -88,6 +88,113 @@ app.post("/ai/generate", async (req, res) => {
     }
 });
 
+app.post("/ai/grade", async (req, res) => {
+    try {
+        const { questions, answers } = req.body;
+
+        if (!questions || !answers) {
+            return res.status(400).json({ error: "Questions and answers are required" });
+        }
+
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "user",
+                        content: `
+You are a grading assistant.
+
+Questions:
+${questions.join("\n")}
+
+Student Answers:
+${answers.join("\n")}
+
+Grade the answers:
+- Give a score out of ${questions.length}
+- Give short feedback
+
+Return ONLY valid JSON. No text before or after.
+
+Format exactly:
+{
+  "score": "X/${questions.length}",
+  "feedback": "..."
+}
+`
+                    }
+                ],
+                temperature: 0.3,
+                max_tokens: 150
+            })
+        });
+
+        const textResponse = await response.text();
+        console.log("GRADE STATUS:", response.status);
+        console.log("GRADE RAW:", textResponse);
+
+        if (!response.ok) {
+            return res.status(response.status).json({
+                error: "OpenAI grading failed",
+                details: textResponse
+            });
+        }
+
+        let data;
+        try {
+            data = JSON.parse(textResponse);
+        } catch {
+            return res.status(500).json({
+                error: "Invalid JSON from OpenAI",
+                raw: textResponse
+            });
+        }
+
+        const text = data.choices?.[0]?.message?.content || "";
+
+        let result;
+
+        try {
+            // Try direct parse
+            result = JSON.parse(text);
+        } catch {
+            try {
+                // Extract JSON manually (fix for AI messy output)
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    result = JSON.parse(jsonMatch[0]);
+                } else {
+                    throw new Error("No JSON found");
+                }
+            } catch {
+                return res.json({
+                    score: `0/${questions.length}`,
+                    feedback: "AI response parsing failed"
+                });
+            }
+        }
+
+        res.json({
+            score: result.score || result.Score || `0/${questions.length}`,
+            feedback: result.feedback || result.Feedback || "No feedback generated"
+        });
+
+
+    } catch (error) {
+        console.error("GRADING ERROR:", error);
+        res.status(500).json({
+            error: "Grading failed",
+            details: error.message
+        });
+    }
+});
+
 app.listen(5001, () => {
     console.log("AI Service running on http://localhost:5001");
 });

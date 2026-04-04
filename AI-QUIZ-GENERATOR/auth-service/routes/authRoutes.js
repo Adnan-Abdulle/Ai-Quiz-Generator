@@ -8,19 +8,21 @@ const { verifyToken, requireAdmin, requireAdminOrTeacher } = require("../middlew
 
 const router = express.Router();
 
+// const fetch = require("node-fetch");
+
 //SMTH setting
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, // smtp.mail.yahoo.com
-  port: 587,                   // Change from 465 to 587
-  secure: false,               // Change from true to false for port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false  // Helps if there are certificate depth issues on the host
-  },
-  connectionTimeout: 20000,    // Increase to 20s to give the handshake more time
+    host: process.env.SMTP_HOST, // smtp.mail.yahoo.com
+    port: 587,                   // Change from 465 to 587
+    secure: false,               // Change from true to false for port 587
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+        rejectUnauthorized: false  // Helps if there are certificate depth issues on the host
+    },
+    connectionTimeout: 20000,    // Increase to 20s to give the handshake more time
 });
 
 transporter.verify((error, success) => {
@@ -161,7 +163,7 @@ router.post("/forgot-password", async (req, res) => {
 
         console.log("💾 Token saved to DB");
 
-       // const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
+        // const resetLink = `${process.env.FRONTEND_URL}/reset.html?token=${token}`;
 
         const clientUrl = process.env.FRONTEND_URL_PROD || process.env.FRONTEND_URL;
 
@@ -174,11 +176,11 @@ router.post("/forgot-password", async (req, res) => {
 
         console.log("before sendMail");
 
-const info = await transporter.sendMail({
-  from: `"AI Quiz App" <${process.env.EMAIL_USER}>`,
-  to: normalizedEmail,
-  subject: "Password Reset Request",
-  html: `
+        const info = await transporter.sendMail({
+            from: `"AI Quiz App" <${process.env.EMAIL_USER}>`,
+            to: normalizedEmail,
+            subject: "Password Reset Request",
+            html: `
     <h2>Password Reset</h2>
     <p>You requested to reset your password.</p>
     <p>Click the button below:</p>
@@ -193,9 +195,9 @@ const info = await transporter.sendMail({
     <p>If you did not request this, you can ignore this email.</p>
     <p>This link expires in 15 minutes.</p>
   `
-});
+        });
 
-console.log("after sendMail", info);
+        console.log("after sendMail", info);
 
 
 
@@ -354,8 +356,8 @@ router.post("/admin/publish-quiz", verifyToken, requireAdminOrTeacher, async (re
 
 
 router.get("/user/quizzes", verifyToken, async (req, res) => {
-  try {
-    const [rows] = await db.execute(`
+    try {
+        const [rows] = await db.execute(`
       SELECT q.*
       FROM quizzes q
       JOIN assignments a ON q.id = a.quiz_id
@@ -363,63 +365,117 @@ router.get("/user/quizzes", verifyToken, async (req, res) => {
       ORDER BY q.created_at DESC
     `, [req.user.id]);
 
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 router.post("/submit-quiz", verifyToken, async (req, res) => {
-  const { quiz_id, answers } = req.body;
-  const userId = req.user.id;
+    try {
+        const { quiz_id, answers } = req.body;
+        const user_id = req.user.id;
 
-  if (!quiz_id || !answers || !Array.isArray(answers)) {
-    return res.status(400).json({ message: "quiz_id and answers are required" });
-  }
+        const [rows] = await db.execute(
+            "SELECT * FROM quizzes WHERE id = ?",
+            [quiz_id]
+        );
 
-  try {
-    await db.execute(
-      "INSERT INTO submissions (user_id, quiz_id, answers) VALUES (?, ?, ?)",
-      [userId, quiz_id, JSON.stringify(answers)]
-    );
+        const quiz = rows[0];
 
-    await db.execute(
-      "UPDATE assignments SET status = 'completed' WHERE quiz_id = ? AND user_id = ?",
-      [quiz_id, userId]
-    );
+        if (!quiz) {
+            return res.status(404).json({ message: "Quiz not found" });
+        }
 
-    res.json({ message: "Quiz submitted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
+
+        let questions;
+        if (Array.isArray(quiz.questions)) {
+            questions = quiz.questions;
+        } else if (typeof quiz.questions === "string") {
+            try {
+                questions = JSON.parse(quiz.questions);
+            } catch {
+                questions = quiz.questions.split("\n").filter(q => q.trim() !== "");
+            }
+        } else {
+            questions = [];
+        }
+
+
+        const aiRes = await fetch("http://localhost:5001/ai/grade", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                questions,
+                answers
+            })
+        });
+
+        const raw = await aiRes.text();
+        console.log("AI RAW RESPONSE:", raw);
+
+        let aiData;
+        try {
+            aiData = JSON.parse(raw);
+        } catch (e) {
+            console.log("⚠️ AI returned NON-JSON, using fallback", raw);
+
+            aiData = {
+                score: `0/${questions ? questions.length : answers.length}`,
+                feedback: raw || "AI failed to grade properly"
+            };
+        }
+
+        console.log("AI RESULT:", aiData);
+
+        console.log("FINAL SCORE:", aiData.score);
+        console.log("FINAL FEEDBACK:", aiData.feedback);
+
+        await db.execute(
+            `INSERT INTO results (user_id, quiz_id, score, feedback)
+            VALUES (?, ?, ?, ?)`,
+            [user_id, quiz_id, aiData.score, aiData.feedback]
+        );
+
+        res.json({
+            message: "Quiz submitted successfully",
+            score: aiData.score,
+            feedback: aiData.feedback
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 router.post("/teacher/assign", verifyToken, requireAdminOrTeacher, async (req, res) => {
-  const { quizId, studentIds } = req.body;
+    const { quizId, studentIds } = req.body;
 
-  if (!quizId || !Array.isArray(studentIds) || studentIds.length === 0) {
-    return res.status(400).json({ message: "quizId and studentIds are required" });
-  }
-
-  try {
-    for (const studentId of studentIds) {
-      await db.execute(
-        "INSERT INTO assignments (quiz_id, user_id, assigned_by) VALUES (?, ?, ?)",
-        [quizId, studentId, req.user.id]
-      );
+    if (!quizId || !Array.isArray(studentIds) || studentIds.length === 0) {
+        return res.status(400).json({ message: "quizId and studentIds are required" });
     }
 
-    res.json({ message: "Quiz assigned successfully to selected students" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
+    try {
+        for (const studentId of studentIds) {
+            await db.execute(
+                "INSERT INTO assignments (quiz_id, user_id, assigned_by) VALUES (?, ?, ?)",
+                [quizId, studentId, req.user.id]
+            );
+        }
+
+        res.json({ message: "Quiz assigned successfully to selected students" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, res) => {
-  try {
-    const [rows] = await db.execute(`
+    try {
+        const [rows] = await db.execute(`
       SELECT u.email, q.topic, a.status, s.submitted_at
       FROM assignments a
       JOIN users u ON a.user_id = u.id
@@ -428,36 +484,36 @@ router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, r
       ORDER BY s.submitted_at DESC
     `);
 
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 // Teacher/Admin: view all students/users
 router.get("/students", verifyToken, requireAdminOrTeacher, async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      "SELECT id, email, role, created_at FROM users ORDER BY id ASC"
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error("Error fetching students:", err);
-    res.status(500).json({ message: "Failed to fetch students" });
-  }
+    try {
+        const [rows] = await db.query(
+            "SELECT id, email, role, created_at FROM users ORDER BY id ASC"
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching students:", err);
+        res.status(500).json({ message: "Failed to fetch students" });
+    }
 });
 
 // Teacher/Admin: view all quizzes
 router.get("/quizzes", verifyToken, requireAdminOrTeacher, async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      "SELECT id, topic, difficulty, created_at FROM quizzes ORDER BY created_at DESC"
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error("Error fetching quizzes:", err);
-    res.status(500).json({ message: "Failed to fetch quizzes" });
-  }
+    try {
+        const [rows] = await db.query(
+            "SELECT id, topic, difficulty, created_at FROM quizzes ORDER BY created_at DESC"
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error("Error fetching quizzes:", err);
+        res.status(500).json({ message: "Failed to fetch quizzes" });
+    }
 });
 
 router.get("/teacher/assignable-students/:quizId", verifyToken, requireAdminOrTeacher, async (req, res) => {
