@@ -116,16 +116,21 @@ ${questions.join("\n")}
 Student Answers:
 ${answers.join("\n")}
 
-Grade the answers:
-- Give a score out of ${questions.length}
-- Give short feedback
+Tasks:
+- Grade the answers
+- Give score out of ${questions.length}
+- For feedback: list the correct answer for each question in this EXACT format:
 
-Return ONLY valid JSON. No text before or after.
+Q1: correct answer
+Q2: correct answer
+Q3: correct answer
+...
 
-Format exactly:
+Return ONLY valid JSON:
+
 {
   "score": "X/${questions.length}",
-  "feedback": "..."
+  "feedback": "Q1: ...\\nQ2: ...\\nQ3: ..."
 }
 `
                     }
