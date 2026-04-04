@@ -483,5 +483,20 @@ router.get("/teacher/assignable-students/:quizId", verifyToken, requireAdminOrTe
   }
 });
 
+router.delete("/admin/delete-quiz/:id", verifyToken, requireAdminOrTeacher, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db.execute("DELETE FROM submissions WHERE quiz_id = ?", [id]);
+    await db.execute("DELETE FROM assignments WHERE quiz_id = ?", [id]);
+    await db.execute("DELETE FROM quizzes WHERE id = ?", [id]);
+
+    res.json({ message: "Quiz deleted successfully" });
+  } catch (err) {
+    console.error("Delete quiz error:", err);
+    res.status(500).json({ message: "Failed to delete quiz" });
+  }
+});
+
 module.exports = router;
 
