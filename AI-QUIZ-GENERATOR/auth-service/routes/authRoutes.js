@@ -433,11 +433,11 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
         console.log("FINAL SCORE:", aiData.score);
         console.log("FINAL FEEDBACK:", aiData.feedback);
 
-        await db.execute(
-            `INSERT INTO results (user_id, quiz_id, score, feedback)
-            VALUES (?, ?, ?, ?)`,
-            [user_id, quiz_id, aiData.score, aiData.feedback]
-        );
+        // await db.execute(
+        //     `INSERT INTO results (user_id, quiz_id, score, feedback)
+        //     VALUES (?, ?, ?, ?)`,
+        //     [user_id, quiz_id, aiData.score, aiData.feedback]
+        // );
 
         res.json({
             message: "Quiz submitted successfully",
