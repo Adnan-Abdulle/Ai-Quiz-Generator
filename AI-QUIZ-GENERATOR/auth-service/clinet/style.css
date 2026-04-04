@@ -260,3 +260,23 @@ button:hover {
 .student-select-card p {
   margin: 4px 0;
 }
+.quiz-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.quiz-actions button {
+  flex: 1;
+  width: auto;
+
+}
+
+.delete-btn {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.delete-btn:hover {
+  background: #fca5a5;
+}
