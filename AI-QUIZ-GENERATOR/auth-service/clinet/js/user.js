@@ -121,7 +121,8 @@ async function loadQuizzes() {
                         resultDiv.innerHTML = `
               <h4>Your Result</h4>
               <p><strong>Score:</strong> ${data.score}</p>
-              <p><strong>Feedback:</strong> ${data.feedback}</p>
+              <p><strong>Feedback:</strong></p>
+            <pre style="white-space: pre-wrap;">${data.feedback}</pre>
   `         ;
 
                         form.appendChild(resultDiv);
