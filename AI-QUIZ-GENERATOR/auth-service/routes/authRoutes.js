@@ -435,8 +435,8 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
         let correctCount = 0;
 
         for (let i = 0; i < correctAnswers.length; i++) {
-            const student = (answers[i] || "").trim().toLowerCase();
-            const correct = (correctAnswers[i] || "").trim().toLowerCase();
+            const student = String(answers[i] || "").trim().toLowerCase();
+            const correct = String(correctAnswers[i] || "").trim().toLowerCase();
 
             if (
                 student === correct ||
@@ -457,11 +457,11 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
         console.log("FINAL SCORE:", score);
         console.log("FINAL FEEDBACK:", feedback);
 
-        // await db.execute(
-        //     `INSERT INTO results (user_id, quiz_id, score, feedback)
-        //     VALUES (?, ?, ?, ?)`,
-        //     [user_id, quiz_id, aiData.score, aiData.feedback]
-        // );
+        await db.execute(
+            `INSERT INTO results (user_id, quiz_id, score, feedback)
+            VALUES (?, ?, ?, ?)`,
+            [user_id, quiz_id, score, feedback]
+        );
 
         res.json({
             message: "Quiz submitted successfully",
@@ -529,7 +529,7 @@ router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, r
 router.get("/students", verifyToken, requireAdminOrTeacher, async (req, res) => {
     try {
         const [rows] = await db.query(
-            "SELECT id, email, role, created_at FROM users ORDER BY id ASC"
+            "SELECT id, email, role, created_at FROM users WHERE role = 'user' ORDER BY id ASC"
         );
         res.json(rows);
     } catch (err) {

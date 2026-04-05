@@ -32,21 +32,51 @@ async function loadQuizzes() {
         });
 
         const quizzes = await res.json();
-        console.log("Quizzes:", quizzes);
         quizList.innerHTML = "";
-
 
         if (!Array.isArray(quizzes) || quizzes.length === 0) {
             quizList.innerHTML = "<p>No quizzes assigned yet.</p>";
             return;
         }
 
-        quizzes.forEach((quiz, quizIndex) => {
+        quizzes.forEach((quiz) => {
             const container = document.createElement("div");
             container.className = "quiz-card";
 
+            const header = document.createElement("div");
+            header.className = "quiz-drawer-header";
+
+            const titleWrap = document.createElement("div");
+
             const title = document.createElement("h4");
             title.textContent = `${quiz.topic} (${quiz.difficulty})`;
+
+            const description = document.createElement("p");
+            description.className = "quiz-description";
+            description.textContent = "Click to open this quiz.";
+
+            titleWrap.appendChild(title);
+            titleWrap.appendChild(description);
+
+            const rightWrap = document.createElement("div");
+            rightWrap.className = "quiz-drawer-right";
+
+            const tag = document.createElement("span");
+            tag.className = "quiz-tag";
+            tag.textContent = "Assigned";
+
+            const icon = document.createElement("span");
+            icon.className = "quiz-drawer-icon";
+            icon.textContent = "▼";
+
+            rightWrap.appendChild(tag);
+            rightWrap.appendChild(icon);
+
+            header.appendChild(titleWrap);
+            header.appendChild(rightWrap);
+
+            const quizContent = document.createElement("div");
+            quizContent.className = "quiz-drawer-content";
 
             const form = document.createElement("form");
             form.className = "quiz-form";
@@ -59,28 +89,52 @@ async function loadQuizzes() {
                 const questionBlock = document.createElement("div");
                 questionBlock.className = "question-block";
 
-                const questionText = document.createElement("p");
-                questionText.innerHTML = `<strong>Q${index + 1}:</strong> ${q}`;
+                const questionLabel = document.createElement("label");
+                questionLabel.innerHTML = `<strong>Question ${index + 1}:</strong> ${q}`;
 
                 const textarea = document.createElement("textarea");
                 textarea.name = `answer${index}`;
-                textarea.rows = 3;
+                textarea.rows = 4;
                 textarea.placeholder = "Type your answer here...";
                 textarea.required = true;
 
-                questionBlock.appendChild(questionText);
+                questionBlock.appendChild(questionLabel);
                 questionBlock.appendChild(textarea);
-
                 form.appendChild(questionBlock);
             });
 
             const submitBtn = document.createElement("button");
             submitBtn.type = "submit";
-            submitBtn.textContent = "Submit Answers";
+            submitBtn.textContent = "Submit Quiz";
+            submitBtn.className = "submit-btn";
 
             form.appendChild(submitBtn);
+            quizContent.appendChild(form);
 
-            // 🚀 Handle submit
+            header.addEventListener("click", () => {
+                const allContents = document.querySelectorAll(".quiz-drawer-content");
+                const allHeaders = document.querySelectorAll(".quiz-drawer-header");
+                const allTags = document.querySelectorAll(".quiz-tag");
+
+                const isOpen = quizContent.classList.contains("open");
+
+                allContents.forEach((content) => content.classList.remove("open"));
+                allHeaders.forEach((item) => item.classList.remove("active"));
+                allTags.forEach((item) => {
+                    if (item.textContent !== "Submitted") {
+                        item.textContent = "Assigned";
+                    }
+                });
+
+                if (!isOpen) {
+                    quizContent.classList.add("open");
+                    header.classList.add("active");
+                    if (tag.textContent !== "Submitted") {
+                        tag.textContent = "Open";
+                    }
+                }
+            });
+
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
 
@@ -105,35 +159,28 @@ async function loadQuizzes() {
                     });
 
                     const data = await res.json();
-                    console.log("SUBMIT RESPONSE:", data);
 
                     if (res.ok) {
-                        // ✅ keep popup
                         alert("Quiz submitted successfully!");
 
-                        // ✅ show result from backend
-                        let resultDiv = form.querySelector(".result-box");
+                        quizContent.classList.remove("open");
+                        header.classList.remove("active");
+                        tag.textContent = "Submitted";
 
-                        if (!resultDiv) {
-                            resultDiv = document.createElement("div");
-                            resultDiv.className = "result-box";
-
-                            resultDiv.style.marginTop = "15px";
-                            resultDiv.style.padding = "12px";
-                            resultDiv.style.background = "#e8f5e9";
-                            resultDiv.style.borderRadius = "10px";
-
-                            form.appendChild(resultDiv);
+                        const oldResult = container.querySelector(".quiz-result");
+                        if (oldResult) {
+                            oldResult.remove();
                         }
 
+                        const resultDiv = document.createElement("div");
+                        resultDiv.className = "quiz-result";
                         resultDiv.innerHTML = `
-              <h4>Your Result</h4>
-              <p><strong>Score:</strong> ${data.score}</p>
-              <p><strong>Feedback:</strong></p>
-            <pre style="white-space: pre-wrap;">${data.feedback}</pre>
-  `         ;
+                            <h4>Your Result</h4>
+                            <p><strong>Score:</strong> ${data.score}</p>
+                            <p><strong>Feedback:</strong> ${data.feedback}</p>
+                        `;
 
-                        //form.appendChild(resultDiv);
+                        container.appendChild(resultDiv);
                     } else {
                         alert(data.message || "Failed to submit quiz");
                     }
@@ -143,8 +190,9 @@ async function loadQuizzes() {
                 }
             });
 
-            container.appendChild(title);
-            container.appendChild(form);
+            container.appendChild(header);
+            container.appendChild(quizContent);
+
             quizList.appendChild(container);
         });
 
@@ -152,7 +200,6 @@ async function loadQuizzes() {
         quizList.textContent = "Failed to load quizzes";
         console.error(err);
     }
-
 }
 
 const assignBtn = document.getElementById("assignQuizBtn");
