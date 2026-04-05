@@ -503,23 +503,23 @@ button:hover {
   margin-top: 12px;
 }
 
-.admin-page .container>.card:nth-of-type(1) {
+.admin-page .container>.card:nth-child(3) {
   grid-column: 1;
 }
 
-.admin-page .container>.card:nth-of-type(2) {
+.admin-page .container>.card:nth-child(4) {
   grid-column: 2;
 }
 
-.admin-page .container>.card:nth-of-type(3) {
+.admin-page .container>.card:nth-child(5) {
   grid-column: 1;
 }
 
-.admin-page .container>.card:nth-of-type(4) {
+.admin-page .container>.card:nth-child(6) {
   grid-column: 2;
 }
 
-.admin-page .container>.card:nth-of-type(5) {
+.admin-page .container>.card:nth-child(7) {
   grid-column: 1 / -1;
 }
 
@@ -540,15 +540,15 @@ button:hover {
     border-radius: 20px;
   }
 
-  .admin-page .container>.card:nth-of-type(1),
-  .admin-page .container>.card:nth-of-type(2),
-  .admin-page .container>.card:nth-of-type(3),
-  .admin-page .container>.card:nth-of-type(4),
-  .admin-page .container>.card:nth-of-type(5),
-  .admin-page .container>button:last-of-type {
-    grid-column: 1;
-  }
-
+ .admin-page .container>.card:nth-child(3),
+ .admin-page .container>.card:nth-child(4),
+ .admin-page .container>.card:nth-child(5),
+ .admin-page .container>.card:nth-child(6),
+ .admin-page .container>.card:nth-child(7),
+ .admin-page .container>button:last-of-type {
+   grid-column: 1;
+ }
+ 
   .admin-page .container>button:last-of-type {
     width: 100%;
     justify-self: stretch;
@@ -609,6 +609,69 @@ button:hover {
   .admin-page button {
     font-size: 0.9rem;
   }
+}
+
+.admin-page .admin-header-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 6px;
+  padding-top: 4px;
+}
+
+.admin-page .admin-brand {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page .admin-brand .brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--text-dark);
+  flex-shrink: 0;
+}
+
+/* Brand text */
+.admin-page .brand-name {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.1;
+  color: var(--text-dark);
+}
+
+.admin-page .admin-brand small {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
+
+.admin-page .admin-title {
+  margin: 0;
+  font-size: 1.8rem;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+
+.admin-page .subtitle {
+  grid-column: 1 / -1;
+  margin: 4px 0 8px;
+  color: var(--text-muted);
 }
 
 /* User Page CSS */
@@ -916,4 +979,16 @@ button:hover {
   color: #6b7280;
   line-height: 1.5;
   font-size: 0.92rem;
+}
+
+.user-page .quiz-result {
+  padding: 16px;
+  margin-top: 12px;
+  border-radius: 12px;
+  background: #f8faff;
+  margin-left: 0;
+}
+
+.user-page .quiz-result p {
+  margin: 6px 0;
 }

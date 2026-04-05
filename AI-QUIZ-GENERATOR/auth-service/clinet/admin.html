@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body class="admin-page">
   <div class="container">
-    <h2>Admin Dashboard</h2>
+    <div class="admin-header-bar">
+      <div class="brand admin-brand">
+        <div class="brand-logo">Q</div>
+        <div>
+          <span class="brand-name">QuizFlow</span>
+          <small>Teacher Portal</small>
+        </div>
+      </div>
+
+      <h2 class="admin-title">Teacher Dashboard</h2>
+    </div>
+
     <p class="subtitle">Generate and manage quizzes for users.</p>
 
     <div class="card">
@@ -31,7 +44,6 @@
       <p id="generateMsg"></p>
     </div>
 
-
     <div class="card">
       <h3>Generated Quizzes</h3>
       <div id="quizList">
@@ -49,19 +61,18 @@
       </div>
     </div>
 
+    <div class="card drawer">
+      <div class="drawer-header" onclick="toggleDrawer('resultsDrawer')">
+        <h3>Student Results</h3>
+        <span class="drawer-icon">▼</span>
+      </div>
 
-<div class="card drawer">
-  <div class="drawer-header" onclick="toggleDrawer('resultsDrawer')">
-    <h3>Student Results</h3>
-    <span class="drawer-icon">▼</span>
-  </div>
-
-  <div id="resultsDrawer" class="drawer-content">
-    <div id="resultsList">
-      <p>No results yet.</p>
+      <div id="resultsDrawer" class="drawer-content">
+        <div id="resultsList">
+          <p>No results yet.</p>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <div class="card drawer">
       <div class="drawer-header" onclick="toggleDrawer('studentsDrawer')">
@@ -72,7 +83,6 @@
         <div id="studentList"></div>
       </div>
     </div>
-   
 
     <button onclick="logout()">Logout</button>
   </div>
@@ -80,16 +90,16 @@
   <div id="assignModal" class="modal hidden">
     <div class="modal-content">
       <h3 id="assignModalTitle">Assign Quiz</h3>
-  
+
       <div id="assignStudentList">
         <p>No students found.</p>
       </div>
-  
+
       <div class="modal-actions">
         <button id="confirmAssignBtn">Assign Selected</button>
         <button type="button" onclick="closeAssignModal()">Cancel</button>
       </div>
-  
+
       <p id="assignModalMsg"></p>
     </div>
   </div>
@@ -97,6 +107,6 @@
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
-  
 </body>
+
 </html>

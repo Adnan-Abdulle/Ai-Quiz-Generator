@@ -449,7 +449,7 @@ async function loadResults() {
         resultsList.innerHTML = data.map(r => `
       <div class="quiz-card">
         <p><strong>User:</strong> ${r.email}</p>
-        <p><strong>Quiz ID:</strong> ${r.quiz_id}</p>
+        <p><strong>Topic:</strong> ${r.topic}</p>
         <p><strong>Score:</strong> ${r.score}</p>
         <p><strong>Feedback:</strong> ${r.feedback}</p>
       </div>
