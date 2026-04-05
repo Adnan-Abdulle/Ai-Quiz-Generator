@@ -8,6 +8,50 @@ const { verifyToken, requireAdmin, requireAdminOrTeacher } = require("../middlew
 
 const router = express.Router();
 
+
+// ✅ ADD THIS HERE
+const numberToWord = {
+    "0": "zero",
+    "1": "one",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six",
+    "7": "seven",
+    "8": "eight",
+    "9": "nine",
+    "10": "ten"
+};
+
+const wordToNumber = {
+    "zero": "0",
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10"
+};
+
+function normalizeAnswer(str) {
+    if (!str) return "";
+
+    let s = str.toLowerCase().trim();
+
+    // remove punctuation/spaces
+    s = s.replace(/[^a-z0-9]/g, "");
+
+    if (wordToNumber[s]) return wordToNumber[s];
+    if (numberToWord[s]) return s;
+
+    return s;
+}
+
 // const fetch = require("node-fetch");
 
 //SMTH setting
@@ -435,14 +479,10 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
         let correctCount = 0;
 
         for (let i = 0; i < correctAnswers.length; i++) {
-            const student = String(answers[i] || "").trim().toLowerCase();
-            const correct = String(correctAnswers[i] || "").trim().toLowerCase();
+            const student = normalizeAnswer(answers[i] || "");
+            const correct = normalizeAnswer(correctAnswers[i] || "");
 
-            if (
-                student === correct ||
-                correct.includes(student) ||
-                student.includes(correct)
-            ) {
+            if (student === correct ) {
                 correctCount++;
             }
         }
