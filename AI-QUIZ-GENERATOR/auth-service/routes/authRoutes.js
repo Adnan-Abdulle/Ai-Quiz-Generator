@@ -445,7 +445,7 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
         }
 
 
-        const aiRes = await fetch("http://localhost:5001/ai/grade", {
+        const aiRes = await fetch("https://aacomp4537.com//ai/grade", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
