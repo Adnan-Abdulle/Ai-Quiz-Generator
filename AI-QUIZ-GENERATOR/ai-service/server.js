@@ -108,23 +108,24 @@ app.post("/ai/grade", async (req, res) => {
                     {
                         role: "user",
                         content: `
-You are a grading assistant.
+You are a quiz answer generator.
 
-Each question MUST be matched with the answer at the same number.
+Rules:
+- Ignore student answers completely.
+- Only determine the correct answer for each question.
+- Use factual knowledge only.
 
 Questions:
 ${questions.map((q, i) => `Q${i + 1}: ${q}`).join("\n")}
 
-Student Answers:
-${answers.map((a, i) => `Q${i + 1}: ${a}`).join("\n")}
-
-Do NOT mix questions.
-
-Return JSON:
+Return ONLY JSON:
 
 {
-  "score": "X/${questions.length}",
-  "feedback": "Q1: correct answer\\nQ2: correct answer\\n..."
+  "correct_answers": [
+    "answer1",
+    "answer2",
+    "answer3"
+  ]
 }
 `
                     }
@@ -180,8 +181,7 @@ Return JSON:
         }
 
         res.json({
-            score: result.score || result.Score || `0/${questions.length}`,
-            feedback: result.feedback || result.Feedback || "No feedback generated"
+            correct_answers: result.correct_answers || []
         });
 
 

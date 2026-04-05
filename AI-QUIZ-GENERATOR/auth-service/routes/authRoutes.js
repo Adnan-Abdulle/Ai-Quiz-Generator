@@ -430,8 +430,32 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
 
         console.log("AI RESULT:", aiData);
 
-        console.log("FINAL SCORE:", aiData.score);
-        console.log("FINAL FEEDBACK:", aiData.feedback);
+        const correctAnswers = aiData.correct_answers || [];
+
+        let correctCount = 0;
+
+        for (let i = 0; i < correctAnswers.length; i++) {
+            const student = (answers[i] || "").trim().toLowerCase();
+            const correct = (correctAnswers[i] || "").trim().toLowerCase();
+
+            if (
+                student === correct ||
+                correct.includes(student) ||
+                student.includes(correct)
+            ) {
+                correctCount++;
+            }
+        }
+
+        const score = `${correctCount}/${correctAnswers.length}`;
+
+        const feedback = correctAnswers
+            .map((ans, i) => `Q${i + 1}: ${ans}`)
+            .join("\n");
+
+        
+        console.log("FINAL SCORE:", score);
+        console.log("FINAL FEEDBACK:", feedback);
 
         // await db.execute(
         //     `INSERT INTO results (user_id, quiz_id, score, feedback)
@@ -441,8 +465,8 @@ router.post("/submit-quiz", verifyToken, async (req, res) => {
 
         res.json({
             message: "Quiz submitted successfully",
-            score: aiData.score,
-            feedback: aiData.feedback
+            score: score,
+            feedback: feedback
         });
 
     } catch (err) {
