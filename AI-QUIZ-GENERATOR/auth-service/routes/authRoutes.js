@@ -8,8 +8,6 @@ const { verifyToken, requireAdmin, requireAdminOrTeacher } = require("../middlew
 
 const router = express.Router();
 
-
-// ✅ ADD THIS HERE
 const numberToWord = {
     "0": "zero",
     "1": "one",
@@ -39,19 +37,20 @@ const wordToNumber = {
 };
 
 function normalizeAnswer(str) {
-    if (!str) return "";
+    if (str === null || str === undefined) return "";
 
-    let s = str.toLowerCase().trim();
+    let s = String(str).toLowerCase().trim();
 
-    // remove punctuation/spaces
-    s = s.replace(/[^a-z0-9]/g, "");
+    // remove punctuation but keep spaces
+    s = s.replace(/[^a-z0-9\s]/g, "");
+
+    s = s.replace(/\s+/g, " ");
 
     if (wordToNumber[s]) return wordToNumber[s];
     if (numberToWord[s]) return s;
 
     return s;
 }
-
 // const fetch = require("node-fetch");
 
 //SMTH setting
@@ -565,7 +564,6 @@ router.get("/teacher/results", verifyToken, requireAdminOrTeacher, async (req, r
     }
 });
 
-// Teacher/Admin: view all students/users
 router.get("/students", verifyToken, requireAdminOrTeacher, async (req, res) => {
     try {
         const [rows] = await db.query(
@@ -578,7 +576,7 @@ router.get("/students", verifyToken, requireAdminOrTeacher, async (req, res) => 
     }
 });
 
-// Teacher/Admin: view all quizzes
+
 router.get("/quizzes", verifyToken, requireAdminOrTeacher, async (req, res) => {
     try {
         const [rows] = await db.query(
