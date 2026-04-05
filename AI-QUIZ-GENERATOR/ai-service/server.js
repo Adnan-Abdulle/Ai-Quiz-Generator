@@ -110,27 +110,21 @@ app.post("/ai/grade", async (req, res) => {
                         content: `
 You are a grading assistant.
 
+Each question MUST be matched with the answer at the same number.
+
 Questions:
-${questions.join("\n")}
+${questions.map((q, i) => `Q${i + 1}: ${q}`).join("\n")}
 
 Student Answers:
-${answers.join("\n")}
+${answers.map((a, i) => `Q${i + 1}: ${a}`).join("\n")}
 
-Tasks:
-- Grade the answers
-- Give score out of ${questions.length}
-- For feedback: list the correct answer for each question in this EXACT format:
+Do NOT mix questions.
 
-Q1: correct answer
-Q2: correct answer
-Q3: correct answer
-...
-
-Return ONLY valid JSON:
+Return JSON:
 
 {
   "score": "X/${questions.length}",
-  "feedback": "Q1: ...\\nQ2: ...\\nQ3: ..."
+  "feedback": "Q1: correct answer\\nQ2: correct answer\\n..."
 }
 `
                     }

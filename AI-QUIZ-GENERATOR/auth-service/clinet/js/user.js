@@ -112,11 +112,19 @@ async function loadQuizzes() {
                         alert("Quiz submitted successfully!");
 
                         // ✅ show result from backend
-                        const resultDiv = document.createElement("div");
-                        resultDiv.style.marginTop = "15px";
-                        resultDiv.style.padding = "12px";
-                        resultDiv.style.background = "#e8f5e9";
-                        resultDiv.style.borderRadius = "10px";
+                        let resultDiv = form.querySelector(".result-box");
+
+                        if (!resultDiv) {
+                            resultDiv = document.createElement("div");
+                            resultDiv.className = "result-box";
+
+                            resultDiv.style.marginTop = "15px";
+                            resultDiv.style.padding = "12px";
+                            resultDiv.style.background = "#e8f5e9";
+                            resultDiv.style.borderRadius = "10px";
+
+                            form.appendChild(resultDiv);
+                        }
 
                         resultDiv.innerHTML = `
               <h4>Your Result</h4>
@@ -125,7 +133,7 @@ async function loadQuizzes() {
             <pre style="white-space: pre-wrap;">${data.feedback}</pre>
   `         ;
 
-                        form.appendChild(resultDiv);
+                        //form.appendChild(resultDiv);
                     } else {
                         alert(data.message || "Failed to submit quiz");
                     }
