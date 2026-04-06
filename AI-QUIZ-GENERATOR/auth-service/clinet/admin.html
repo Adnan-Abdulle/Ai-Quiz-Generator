@@ -68,6 +68,27 @@
       </div>
 
       <div id="resultsDrawer" class="drawer-content">
+        <div class="results-summary">
+          <div class="summary-cards">
+            <div class="summary-card">
+              <span class="summary-label">Full Marks</span>
+              <strong id="fullMarksCount">0</strong>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Pass</span>
+              <strong id="passCount">0</strong>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Fail</span>
+              <strong id="failCount">0</strong>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <canvas id="resultsChart"></canvas>
+          </div>
+        </div>
+
         <div id="resultsList">
           <p>No results yet.</p>
         </div>
@@ -104,6 +125,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>

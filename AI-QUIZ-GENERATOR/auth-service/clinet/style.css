@@ -992,3 +992,59 @@ button:hover {
 .user-page .quiz-result p {
   margin: 6px 0;
 }
+
+canvas {
+  max-width: 100%;
+  margin-top: 10px;
+}
+
+.results-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.summary-card {
+  background: #f8faff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.summary-card strong {
+  font-size: 1.4rem;
+  color: #1f2937;
+}
+
+.chart-card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 14px;
+  height: 280px;
+}
+
+@media (max-width: 640px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card {
+    height: 240px;
+  }
+}

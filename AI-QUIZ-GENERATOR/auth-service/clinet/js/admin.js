@@ -2,7 +2,7 @@ let currentQuizPreview = null;
 let selectedQuizId = null;
 let selectedStudentIds = [];
 let assignableStudents = [];
-
+let resultsChartInstance = null;
 
 async function loadAdminPage() {
     const adminInfo = document.getElementById("adminInfo");
@@ -32,7 +32,6 @@ API Calls Used: ${data.api_calls_used}`;
         console.error(err);
     }
 }
-
 
 const generateBtn = document.getElementById("generateQuizBtn");
 
@@ -91,6 +90,7 @@ async function generate() {
         });
 
         container.appendChild(ul);
+
         const publishBtn = document.createElement("button");
         publishBtn.textContent = "Publish";
         publishBtn.onclick = publishQuiz;
@@ -148,7 +148,6 @@ async function publishQuiz() {
         currentQuizPreview = null;
         document.getElementById("quizList").innerHTML = "";
 
-
         loadAllQuizzesForTeacher();
 
     } catch (err) {
@@ -165,7 +164,6 @@ function discardQuiz() {
 
     generateMsg.textContent = "Quiz discarded";
 }
-
 
 async function loadStudentsForTeacher() {
     const studentList = document.getElementById("studentList");
@@ -235,10 +233,10 @@ async function loadAllQuizzesForTeacher() {
         <p><strong>ID:</strong> ${quiz.id}</p>
         <p><strong>Topic:</strong> ${quiz.topic}</p>
         <p><strong>Difficulty:</strong> ${quiz.difficulty}</p>
-         <div class="quiz-actions">
-        <button onclick="openAssignModal(${quiz.id}, '${quiz.topic}', '${quiz.difficulty}')"> Assign </button>
-        <button onclick="deleteQuiz(${quiz.id})" class="delete-btn"> Delete </button>
-      </div>
+        <div class="quiz-actions">
+          <button onclick="openAssignModal(${quiz.id}, '${quiz.topic}', '${quiz.difficulty}')">Assign</button>
+          <button onclick="deleteQuiz(${quiz.id})" class="delete-btn">Delete</button>
+        </div>
       </div>
     `).join("");
     } catch (err) {
@@ -307,6 +305,7 @@ async function renderStudentsForAssignModal() {
         container.innerHTML = "<p>Failed to load students</p>";
     }
 }
+
 function displayStudentCards() {
     const container = document.getElementById("assignStudentList");
 
@@ -325,6 +324,7 @@ function displayStudentCards() {
     </div>
   `).join("");
 }
+
 function toggleDrawer(drawerId) {
     const drawer = document.getElementById(drawerId);
     if (!drawer) return;
@@ -426,8 +426,73 @@ async function deleteQuiz(quizId) {
     }
 }
 
+function parseScore(scoreText) {
+    if (!scoreText || typeof scoreText !== "string" || !scoreText.includes("/")) {
+        return { correct: 0, total: 0, percentage: 0 };
+    }
+
+    const parts = scoreText.split("/");
+    const correct = Number(parts[0]);
+    const total = Number(parts[1]);
+
+    if (!Number.isFinite(correct) || !Number.isFinite(total) || total <= 0) {
+        return { correct: 0, total: 0, percentage: 0 };
+    }
+
+    return {
+        correct,
+        total,
+        percentage: (correct / total) * 100
+    };
+}
+
+function renderResultsChart(fullMarks, pass, fail) {
+    const canvas = document.getElementById("resultsChart");
+    if (!canvas) return;
+
+    if (resultsChartInstance) {
+        resultsChartInstance.destroy();
+    }
+
+    resultsChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: ["Full Marks", "Pass", "Fail"],
+            datasets: [
+                {
+                    label: "Students",
+                    data: [fullMarks, pass, fail],
+                    borderWidth: 1,
+                    borderRadius: 8
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
 async function loadResults() {
     const resultsList = document.getElementById("resultsList");
+    const fullMarksCount = document.getElementById("fullMarksCount");
+    const passCount = document.getElementById("passCount");
+    const failCount = document.getElementById("failCount");
+
     if (!resultsList) return;
 
     const token = localStorage.getItem("token");
@@ -441,23 +506,61 @@ async function loadResults() {
 
         const data = await res.json();
 
-        if (!Array.isArray(data)) {
+        if (!Array.isArray(data) || data.length === 0) {
             resultsList.innerHTML = "<p>No results yet.</p>";
+
+            if (fullMarksCount) fullMarksCount.textContent = "0";
+            if (passCount) passCount.textContent = "0";
+            if (failCount) failCount.textContent = "0";
+
+            renderResultsChart(0, 0, 0);
             return;
         }
 
-        resultsList.innerHTML = data.map(r => `
-      <div class="quiz-card">
-        <p><strong>User:</strong> ${r.email}</p>
-        <p><strong>Topic:</strong> ${r.topic}</p>
-        <p><strong>Score:</strong> ${r.score}</p>
-        <p><strong>Feedback:</strong> ${r.feedback}</p>
-      </div>
-    `).join("");
+        let fullMarks = 0;
+        let pass = 0;
+        let fail = 0;
+
+        resultsList.innerHTML = data.map(r => {
+            const parsed = parseScore(r.score);
+
+            if (parsed.percentage === 100) {
+                fullMarks++;
+            } else if (parsed.percentage >= 50) {
+                pass++;
+            } else {
+                fail++;
+            }
+
+            return `
+              <div class="quiz-card">
+                <p><strong>User:</strong> ${r.email}</p>
+                <p><strong>Topic:</strong> ${r.topic}</p>
+                <p><strong>Score:</strong> ${r.score}</p>
+                <p><strong>Feedback:</strong> ${r.feedback}</p>
+              </div>
+            `;
+        }).join("");
+
+        if (fullMarksCount) fullMarksCount.textContent = String(fullMarks);
+        if (passCount) passCount.textContent = String(pass);
+        if (failCount) failCount.textContent = String(fail);
+
+        renderResultsChart(fullMarks, pass, fail);
 
     } catch (err) {
         console.error(err);
         resultsList.innerHTML = "<p>Failed to load results</p>";
+
+        const fullMarksCount = document.getElementById("fullMarksCount");
+        const passCount = document.getElementById("passCount");
+        const failCount = document.getElementById("failCount");
+
+        if (fullMarksCount) fullMarksCount.textContent = "0";
+        if (passCount) passCount.textContent = "0";
+        if (failCount) failCount.textContent = "0";
+
+        renderResultsChart(0, 0, 0);
     }
 }
 
