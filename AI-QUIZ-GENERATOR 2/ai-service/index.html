@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AI Quiz Generator</title>
+</head>
+
+<body>
+
+    <h2>AI Quiz Generator</h2>
+
+    <input type="text" id="topic" placeholder="Enter topic..." />
+    <input type="text" id="diff" placeholder="Enter difficulty" />
+    <input type="text" id="count" placeholder="Number of questions" />
+    <button onclick="generate()">Generate Questions</button>
+
+    <ul id="result"></ul>
+
+    <script>
+        async function generate() {
+            const topic = document.getElementById("topic").value;
+            const difficulty = document.getElementById("diff").value;
+            const count = document.getElementById("count").value;
+
+            const res = await fetch("http://localhost:5001/ai/generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ topic, difficulty, count })
+            });
+
+            const data = await res.json();
+
+            const list = document.getElementById("result");
+            list.innerHTML = "";
+
+            data.questions.forEach(q => {
+                const li = document.createElement("li");
+                li.textContent = q;
+                list.appendChild(li);
+            });
+        }
+    </script>
+
+</body>
+
+</html>

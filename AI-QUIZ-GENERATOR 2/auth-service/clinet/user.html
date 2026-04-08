@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+
+<body class="user-page">
+  <div class="dashboard-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">Q</div>
+        <div>
+          <h1>QuizFlow</h1>
+          <p>Student Portal</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active">Dashboard</a>
+        <a href="#availableQuizzesSection" class="nav-item">Quizzes</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="page-header-card">
+        <div>
+          <p class="section-label">DASHBOARD</p>
+          <h2>My Quizzes</h2>
+          <p class="page-subtitle">View your assigned quizzes and submit your answers.</p>
+        </div>
+      </section>
+
+      <section class="info-grid compact-info-grid">
+        <div class="info-card glass-card">
+          <div class="card-header">
+            <h3>User Info</h3>
+            <span class="card-pill">Profile</span>
+          </div>
+          <p id="userInfo" class="user-info-text">Loading user info...</p>
+        </div>
+
+        <div class="info-card glass-card">
+          <div class="card-header">
+            <h3>Status</h3>
+            <span class="card-pill">Live</span>
+          </div>
+          <p class="stat-sub">Your assigned quizzes will appear below. Open one when you're ready to begin.</p>
+        </div>
+      </section>
+
+      <section class="glass-card quizzes-section" id="availableQuizzesSection">
+        <div class="section-header">
+          <div>
+            <p class="section-label">AVAILABLE NOW</p>
+            <h3>Available Quizzes</h3>
+          </div>
+        </div>
+
+      <div id="availableQuizzes">
+        <p>Loading quizzes...</p>
+      </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/user.js"></script>
+</body>
+
+</html>
